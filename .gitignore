@@ -1,5 +1,13 @@
-# Data
-/data/
+# Ignore all files inside data/, but allow folder structure
+data/*
+!data/.gitkeep
+!data/**/.gitkeep
+
+# If using the Cookiecutter structure under my_project3/
+my_project3/data/*
+!my_project3/data/.gitkeep
+!my_project3/data/**/.gitkeep
+
 
 # Mac OS-specific storage files
 .DS_Store
