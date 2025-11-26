@@ -1,8 +1,9 @@
 import pandas as pd
 from pathlib import Path
+from my_project3.config import FEATURES_DATA_DIR, MATCHUPS_DATA_DIR
 
-FEATURE_DIR = Path("data/features")
-OUTPUT_DIR = Path("data/matchups")
+FEATURE_DIR = FEATURES_DATA_DIR
+OUTPUT_DIR = MATCHUPS_DATA_DIR
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def build_matchups_for_season(season: str):

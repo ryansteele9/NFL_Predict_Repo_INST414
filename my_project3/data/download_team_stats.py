@@ -6,14 +6,14 @@ from dotenv import load_dotenv
 from pathlib import Path
 import requests
 import pandas as pd
+from my_project3.config import RAW_DATA_DIR
 
 
 # Config
 load_dotenv()
 API_KEY = os.getenv("SPORTSDATAIO_API_KEY")
 BASE = "https://api.sportsdata.io/api/nfl"
-RAW_DIR = Path(__file__).resolve().parents[1] / "data" / "raw"
-RAW_DIR.mkdir(parents=True, exist_ok=True)
+RAW_DIR  = RAW_DATA_DIR
 
 SLEEP = float(os.getenv("SDIO_SLEEP_SEC", "0.4"))
 

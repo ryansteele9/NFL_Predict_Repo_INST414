@@ -1,8 +1,9 @@
 import pandas as pd
 from pathlib import Path
+from my_project3.config import TEAMS_DATA_DIR, FEATURES_DATA_DIR 
 
-TEAM_DIR = Path("data/teams")
-FEATURE_DIR = Path("data/features")
+TEAM_DIR = TEAMS_DATA_DIR
+FEATURE_DIR = FEATURES_DATA_DIR 
 FEATURE_DIR.mkdir(parents=True, exist_ok=True)
 
 def add_team_features(team_file_path):

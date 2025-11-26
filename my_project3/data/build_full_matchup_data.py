@@ -1,7 +1,8 @@
 import pandas as pd
 from pathlib import Path
+from my_project3.config import MATCHUPS_DATA_DIR
 
-MATCHUP_DIR = Path("my_project3/data/matchups")
+MATCHUP_DIR = MATCHUPS_DATA_DIR
 OUTPUT_PATH = MATCHUP_DIR / "matchups_all_seasons.csv"
 
 def combine_matchups():

@@ -1,8 +1,8 @@
 import pandas as pd
-from pathlib import Path
+from my_project3.config import RAW_DATA_DIR, PROCESSED_DATA_DIR
 
-RAW_DIR = Path("data/raw")
-PROC_DIR = Path("data/processed")
+RAW_DIR  = RAW_DATA_DIR
+PROC_DIR = PROCESSED_DATA_DIR
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 
 def clean_season(season: str):
