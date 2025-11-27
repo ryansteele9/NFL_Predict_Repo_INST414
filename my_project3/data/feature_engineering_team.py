@@ -32,8 +32,34 @@ def add_team_features(team_file_path):
     df["cumulative_points_against"] = df["points_against"].shift(1).cumsum()
     df["cumulative_wins"] = df["win"].shift(1).cumsum()
     
-    df["target_next_point_diff"] = df["point_diff"].shift(-1)
+    do_not_lag = {
+        "gamekey", "season", "week", "date", "team", "opponent", "home_away", 
+        "stadium", "dayofweek", "teamgameid", "teamid", "opponentid", 
+        "opp_gamekey", "opp_season", "opp_week", "opp_date", "opp_team", 
+        "opp_opponent", "opp_home_away", "opp_stadium", "opp_dayofweek", 
+        "opp_teamgameid", "opp_teamid", "opp_opponentid", "win", "opp_win", 
+        "points_for", "points_against", "opp_points_for", "opp_points_against", 
+        "point_diff", "opp_point_diff", "totalscore", "opp_totalscore"
+    }
     
+    already_shifted = {
+        "rolling_points_for_3", "rolling_points_against_3", 
+        "rolling_point_diff_3", "rolling_yards_total_3", "rolling_yards_allowed_3", 
+        "rolling_turnover_diff_3", "rolling_third_down_pct_3", "rolling_win_rate_5", 
+        "cumulative_points_for", "cumulative_points_against", "cumulative_wins"
+    }
+    
+    feature_cols = [
+        col for col in df.columns 
+        if col not in do_not_lag 
+        and col not in already_shifted 
+        and pd.api.types.is_numeric_dtype(df[col])
+        ]
+    
+    if feature_cols:
+        df[feature_cols] = df.groupby("team")[feature_cols].shift(1)
+        # df = df.dropna(subset=feature_cols) If need to drop rows without data from lag
+        
     round_cols_1 = [
         "rolling_points_for_3", "rolling_points_against_3", 
         "rolling_point_diff_3", "rolling_yards_total_3, rolling_yards_allowed_3"
