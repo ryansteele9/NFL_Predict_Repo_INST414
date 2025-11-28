@@ -1,10 +1,46 @@
 import pandas as pd
+import numpy as np
+from loguru import logger
 from pathlib import Path
 from my_project3.config import TEAMS_DATA_DIR, FEATURES_DATA_DIR 
 
 TEAM_DIR = TEAMS_DATA_DIR
 FEATURE_DIR = FEATURES_DATA_DIR 
 FEATURE_DIR.mkdir(parents=True, exist_ok=True)
+
+def add_future_dummy_week(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds dummy week for upcoming week. Because data is shifted, dummy future week
+    will house data from the most recent week. NaNs for columns whose data 
+    doesn't exist yet for future dummy week.
+    """
+    required = {"season", "week", "team"}
+    missing = required - set(df.columns)
+    if missing:
+        raise ValueError(f"Missing required columns for dummy creation: {missing}")
+    
+    groups = []
+    for (season, team), g in df.groupby(["season", "team"]):
+        g = g.sort_values("week").copy()
+        max_week = int(g["week"].max())
+        
+        dummy = g.iloc[-1].copy()
+        dummy["week"] = max_week + 1
+        
+        unknown_features = {
+            "gamekey", "points_for", "points_against", "totalscore", "scorequarter1", 
+            "scorequarter2", "scorequarter3", "scorequarter4", "scoreovertime", 
+            "opponentscorequarter1", "opponentscorequarter2", "opponentscorequarter3", 
+            "opponentscorequarter4", "opponentscoreovertime", "point_diff", "date"
+        }
+        
+        for feature in unknown_features:
+            if feature in dummy.index:
+                dummy[feature] = np.nan
+        
+        groups.append(pd.concat([g, pd.DataFrame([dummy])], ignore_index=True))
+    
+    return pd.concat(groups, ignore_index=True)
 
 def add_team_features(team_file_path):
     """
@@ -13,6 +49,8 @@ def add_team_features(team_file_path):
     df = pd.read_csv(team_file_path)
 
     df = df.sort_values(by="week").reset_index(drop=True)
+    
+    df = add_future_dummy_week(df)
 
     df["rolling_points_for_3"] = df["points_for"].shift(1).rolling(3).mean()
     df["rolling_points_against_3"] = df["points_against"].shift(1).rolling(3).mean()
@@ -34,12 +72,11 @@ def add_team_features(team_file_path):
     
     do_not_lag = {
         "gamekey", "season", "week", "date", "team", "opponent", "home_away", 
-        "stadium", "dayofweek", "teamgameid", "teamid", "opponentid", 
-        "opp_gamekey", "opp_season", "opp_week", "opp_date", "opp_team", 
-        "opp_opponent", "opp_home_away", "opp_stadium", "opp_dayofweek", 
-        "opp_teamgameid", "opp_teamid", "opp_opponentid", "win", "opp_win", 
-        "points_for", "points_against", "opp_points_for", "opp_points_against", 
-        "point_diff", "opp_point_diff", "totalscore", "opp_totalscore"
+        "stadium", "dayofweek", "teamgameid", "teamid", "opponentid", "win", 
+        "points_for", "points_against", "point_diff", "totalscore", 
+        "scorequarter1", "scorequarter2", "scorequarter3", "scorequarter4", 
+        "scoreovertime", "opponentscorequarter1", "opponentscorequarter2", 
+        "opponentscorequarter3", "opponentscorequarter4", "opponentscoreovertime"
     }
     
     already_shifted = {

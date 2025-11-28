@@ -12,8 +12,20 @@ def combine_matchups():
         if file_path.exists():
             df = pd.read_csv(file_path)
             df["season"] = int(season)
+            
+            if "point_diff" in df.columns:
+                before = len(df)
+                df = df[df["point_diff"].notna()].copy()
+                after = len(df)
+                print(f"""Loaded {file_path} with {before} rows.
+                      {before - after} rows with NaN point_diff dropped.
+                      """)
+            else:
+                print(
+                    f"WARNING: 'point_diff' not in {file_path} columns; "
+                    "no filtering of dummy rows applied."
+                )
             all_dfs.append(df)
-            print(f"Loaded {file_path} with {len(df)} rows")
         else:
             print(f"Missing file: {file_path}, skipping...")
 
