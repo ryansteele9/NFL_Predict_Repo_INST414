@@ -1,10 +1,38 @@
 import pandas as pd
 from pathlib import Path
+import numpy as np
 from my_project3.config import FEATURES_DATA_DIR, MATCHUPS_DATA_DIR
 
 FEATURE_DIR = FEATURES_DATA_DIR
 OUTPUT_DIR = MATCHUPS_DATA_DIR
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+STRENGTH_BASE_COLS = [
+    "rolling_point_diff_3",
+    "rolling_win_rate_5",
+    "rolling_yards_total_3",
+    "rolling_yards_allowed_3",
+    "cumulative_points_for",
+    "cumulative_points_against",
+    "cumulative_wins",
+]
+
+def add_matchup_strength_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Creates strength features from existing rolling averages and cumulative stats.
+    """
+    for col in STRENGTH_BASE_COLS:
+        home_col = col
+        opp_col = f"opp_{col}"
+        
+        if home_col in df.columns and opp_col in df.columns:
+            diff_name = f"strength_diff_{col}"
+            sum_name = f"strength_sum_{col}"
+
+            df[diff_name] = df[home_col] - df[opp_col]
+            df[sum_name] = df[home_col] + df[opp_col]
+    
+    return df
 
 def build_matchups_for_season(season: str):
     print(f"\nBuilding matchup data for season {season}...")
@@ -32,6 +60,7 @@ def build_matchups_for_season(season: str):
     else:
         matchups = matchups.sort_values(by="week").reset_index(drop=True)
 
+    matchups = add_matchup_strength_features(matchups)
     out_path = OUTPUT_DIR / f"matchups_{season}.csv"
     matchups.to_csv(out_path, index=False)
     print(f"Saved {len(matchups)} games to {out_path}")

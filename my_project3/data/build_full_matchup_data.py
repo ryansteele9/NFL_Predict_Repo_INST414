@@ -1,6 +1,8 @@
 import pandas as pd
 from pathlib import Path
 from my_project3.config import MATCHUPS_DATA_DIR
+from my_project3.data.team_ratings import add_elo_features
+
 
 MATCHUP_DIR = MATCHUPS_DATA_DIR
 OUTPUT_PATH = MATCHUP_DIR / "matchups_all_seasons.csv"
@@ -31,6 +33,14 @@ def combine_matchups():
 
     if all_dfs:
         full_df = pd.concat(all_dfs, ignore_index=True)
+        
+        if "gamekey" not in full_df.columns:
+            full_df = full_df.sort_values(["season", "week"])
+        else:
+            full_df = full_df.sort_values(["season", "week", "gamekey"])
+        
+        full_df = add_elo_features(full_df)
+        
         full_df.to_csv(OUTPUT_PATH, index=False)
         print(f"\nCombined dataset saved to: {OUTPUT_PATH}")
         print(f"Total rows: {len(full_df)}")

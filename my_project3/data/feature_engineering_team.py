@@ -49,8 +49,6 @@ def add_team_features(team_file_path):
     df = pd.read_csv(team_file_path)
 
     df = df.sort_values(by="week").reset_index(drop=True)
-    
-    df = add_future_dummy_week(df)
 
     df["rolling_points_for_3"] = df["points_for"].shift(1).rolling(3).mean()
     df["rolling_points_against_3"] = df["points_against"].shift(1).rolling(3).mean()
@@ -113,6 +111,9 @@ def add_team_features(team_file_path):
     for col in round_cols_3:
         if col in df.columns:
             df[col] = df[col].round(3)
+    
+    df = add_future_dummy_week(df)
+    
     return df
 
 def process_season(season: str):

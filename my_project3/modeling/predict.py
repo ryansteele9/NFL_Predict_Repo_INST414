@@ -6,10 +6,10 @@ import os
 import numpy as np
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 import typer
 import requests
 
+from my_project3.data.build_matchup_data import add_matchup_strength_features
 from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR, FEATURES_DATA_DIR, RAW_DATA_DIR
 
 app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
@@ -158,6 +158,7 @@ def build_future_matchups(season: int, week: int, season_type: str = "REG") -> p
         rows.append(row)
         
     df_matchups = pd.DataFrame(rows)
+    df_matchups = add_matchup_strength_features(df_matchups)
     logger.info(f"Constructed {len(df_matchups)} future matchup rows.")
     return df_matchups
 

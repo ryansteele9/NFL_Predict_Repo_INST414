@@ -58,6 +58,16 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
         "timeofpossession",
         "totalscore",
         "opponenttimeofpossession",
+        "scorequarter1",
+        "scorequarter2",
+        "scorequarter3",
+        "scorequarter4",
+        "scoreovertime",
+        "opponentscorequarter1",
+        "opponentscorequarter2",
+        "opponentscorequarter3",
+        "opponentscorequarter4",
+        "opponentscoreovertime",
         "opp_gamekey",
         "opp_date",
         "opp_seasontype",
@@ -80,6 +90,17 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
         "opp_timeofpossession",
         "opp_totalscore",
         "opp_opponenttimeofpossession",
+        "opp_scorequarter1",
+        "opp_scorequarter2",
+        "opp_scorequarter3",
+        "opp_scorequarter4",
+        "opp_scoreovertime",
+        "opp_opponentscorequarter1",
+        "opp_opponentscorequarter2",
+        "opp_opponentscorequarter3",
+        "opp_opponentscorequarter4",
+        "opp_opponentscoreovertime",
+        "next_game_win"
     }
     
     feature_cols = [c for c in df.columns if c not in drop_cols and pd.api.types.is_numeric_dtype(df[c])]
@@ -98,9 +119,12 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
     before_drop = len(df)
     df = df.dropna(subset=[target_col])
     logger.info(f"Dropped {before_drop - len(df)} rows with missing target column")
-    
+
     feature_cols = select_features(df, target_col)
     logger.info(f"Using {len(feature_cols)} features")
+    logger.info([col for col in feature_cols if "strength_" in col])
+    logger.info([c for c in feature_cols if "next" in c])
+    logger.info([c for c in feature_cols if "score" in c or "points_for" in c or "points_against" in c])
     
     df[feature_cols] = df[feature_cols].fillna(0)
     
