@@ -10,7 +10,9 @@ import typer
 import requests
 
 from my_project3.data.build_matchup_data import add_matchup_strength_features
-from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR, FEATURES_DATA_DIR, RAW_DATA_DIR
+from my_project3.data.team_ratings import get_elo_ratings_to_week
+from my_project3.data.download_odds import fetch_odds, parse_odds_response
+from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR, FEATURES_DATA_DIR, RAW_DATA_DIR, ODDS_PROC_DIR
 
 app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
 
@@ -19,6 +21,21 @@ SCHEDULES_DIR.mkdir(parents=True, exist_ok=True)
 
 SPORTSDATA_API_KEY = os.environ.get("SPORTSDATAIO_API_KEY")
 
+VEGAS_SCALE_MAP = {
+    "home_moneyline": 0.1,
+    "away_moneyline": 0.1,
+    "home_implied_prob": 0.3,
+    "vegas_spread": 0.5,
+}
+
+def scale_vegas_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Apply consistent scaling to Vegas-related columns (in-place)."""
+    for col, factor in VEGAS_SCALE_MAP.items():
+        if col in df.columns:
+            df[col] = df[col] * factor
+        else:
+            logger.debug(f"Vegas column '{col}' not found in dataframe during scaling.")
+    return df
 
 def default_model_path() -> Path:
     return MODELS_DIR / "xgb_point_diff.pkl"
@@ -43,6 +60,58 @@ def load_model_and_features(model_path: Path):
         )
     logger.info(f"Loaded model with {len(feature_cols)} features.")
     return model, feature_cols
+
+def load_historical_matchups() -> pd.DataFrame:
+    """
+    Load full historical matchup dataset to compute elos.
+    """
+    
+    path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv"
+    if not path.exists():
+        raise FileNotFoundError(f"{path} not found. Run build_full_matchup_data.py before predicting.")
+    
+    return pd.read_csv(path)
+
+def load_odds_for_week(season: int, week: int) -> pd.DataFrame:
+    """
+    Load processed odds for a given season/week.
+    """
+    odds_path = ODDS_PROC_DIR / f"odds_{season}_week{week:02d}.csv"
+    if not odds_path.exists():
+        logger.warning(f"No odds file found at {odds_path}; vegas features will be missing.")
+        return pd.DataFrame()
+    
+    odds = pd.read_csv(odds_path)
+    
+    rename_map = {
+        "HomeTeam": "home_team",
+        "AwayTeam": "away_team",
+    }
+    
+    for old, new in rename_map.items():
+        if old in odds.columns and new not in odds.columns:
+            odds = odds.rename(columns={old: new})
+    
+    required = {"season", "week", "home_team", "away_team"}
+    missing = required - set(odds.columns)
+    if missing:
+        logger.warning(f"Odds file missing required columns {missing}; will not merge odds.")
+        return pd.DataFrame()
+    
+    odds = (
+        odds.groupby(["season", "week", "home_team", "away_team"], as_index=False)
+        .agg(
+            {
+                "vegas_spread": "mean",
+                "vegas_total": "mean",
+                "home_moneyline": "mean",
+                "away_moneyline": "mean",
+                "home_implied_prob": "mean",
+            }
+        )
+    )
+    
+    return odds
 
 def fetch_schedules(season: int, week:int) -> pd.DataFrame:
     """
@@ -73,7 +142,7 @@ def fetch_schedules(season: int, week:int) -> pd.DataFrame:
     rename_map = {
         "HomeTeam": "home_team",
         "AwayTeam": "away_team",
-        "GameKey": "game_id",
+        "GameKey": "gamekey",
         "ScoreID": "game_id",
     }
     for old, new in rename_map.items():
@@ -130,6 +199,11 @@ def build_future_matchups(season: int, week: int, season_type: str = "REG") -> p
     For each given future week, build a single-row matchup using data from dummy rows
     """
     schedule_df = load_schedule(season, week, season_type)
+    hist = load_historical_matchups()
+    elo_ratings = get_elo_ratings_to_week(hist, season, week)
+    
+    def elo_lookup(team: str) -> float:
+        return elo_ratings.get("home_elo_pre", 1500.0)
     
     rows = []
     logger.info(f"Building future matchups for {len(schedule_df)} games...")
@@ -159,6 +233,36 @@ def build_future_matchups(season: int, week: int, season_type: str = "REG") -> p
         
     df_matchups = pd.DataFrame(rows)
     df_matchups = add_matchup_strength_features(df_matchups)
+    
+    df_matchups["home_elo_pre"] = df_matchups["home_team"].map(elo_lookup)
+    df_matchups["away_elo_pre"] = df_matchups["away_team"].map(elo_lookup)
+    df_matchups["diff_elo_pre"] = df_matchups["home_elo_pre"] - df_matchups["away_elo_pre"]
+    
+    odds = load_odds_for_week(season, week)
+    if not odds.empty:
+        before = len(df_matchups)
+        df_matchups = df_matchups.merge(
+            odds,
+            on=["season", "week", "home_team", "away_team"],
+            how="left",
+        )
+        logger.info(
+            f"Merged vegas odds for {df_matchups['vegas_spread'].notna().sum()} "
+            f"of {before} games."
+        )
+    else:
+        for col in [
+            "vegas_spread",
+            "vegas_total",
+            "home_moneyline",
+            "away_moneyline",
+            "home_implied_prob",
+        ]:
+            if col not in df_matchups.columns:
+                df_matchups[col] = np.nan
+    
+    df_matchups = scale_vegas_features(df_matchups)
+    
     logger.info(f"Constructed {len(df_matchups)} future matchup rows.")
     return df_matchups
 
@@ -166,6 +270,8 @@ def add_predictions(df_games: pd.DataFrame, model, feature_cols: List[str]) -> p
     missing = [col for col in feature_cols if col not in df_games.columns]
     if missing:
         raise ValueError(f"Future matchup data missing feature columns: {missing}")
+    
+    df_games[feature_cols] = df_games[feature_cols].fillna(0)
     
     X = df_games[feature_cols].to_numpy()
     preds = model.predict(X)

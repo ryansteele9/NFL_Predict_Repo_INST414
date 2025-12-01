@@ -13,14 +13,64 @@ from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR
 
 app = typer.Typer()
 
-def make_splits(df: pd.DataFrame):
+VEGAS_SCALE_MAP = {
+    "home_moneyline": 0.1,
+    "away_moneyline": 0.1,
+    "home_implied_prob": 0.3,
+    "vegas_spread": 0.5,
+}
+
+def scale_vegas_features(df: pd.DataFrame) -> pd.DataFrame:
     """
+    Apply consistent scaling to Vegas-related columns.
+    """
+    for col, factor in VEGAS_SCALE_MAP.items():
+        if col in df.columns:
+            df[col] = df[col] * factor
+        else:
+            logger.warning(f"Vegas column '{col}' not found in dataframe during scaling.")
+    return df
+
+def make_rolling_splits(df: pd.DataFrame, start_season: int = 2022) -> list[dict]:
+    """
+    Rolling-origin train/val/test splits.
+    
+    For each season szn:
+        - Train on seasons < szn
+        - Val on szn weeks 1-5
+        - Test on szn weeks 6+
+    """
+    
+    seasons = sorted(df["season"].unique())
+    
+    splits = []
+    
+    for szn in seasons:
+        if szn == start_season:
+            continue
+        
+        train_split = df["season"] < szn
+        val_split = (df["season"] == szn) & (df["week"].between(1, 5))
+        test_split = (df["season"] == szn) & (df["week"] >= 6)
+        
+        splits.append({
+            "test_season": szn,
+            "train_split": train_split,
+            "val_split": val_split,
+            "test_split": test_split,
+        })
+        
+    return splits
+
+"""
+def make_splits(df: pd.DataFrame):
+    '''
     Time-based train/val/test splits
     
     — Train: 2022 - 2025 (week 5)
     — Validate: 2025 weeks 6-8
     — Test: 2025 weeks 9-12
-    """
+    '''
     season_col = "season"
     week_col = "week"
     
@@ -29,84 +79,131 @@ def make_splits(df: pd.DataFrame):
     test_set = (df[season_col] == 2025) & (df[week_col] >= 9)
     
     return train_set, val_set, test_set
-
+"""
 def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
     """
-    Use all numeric columns except IDs, metadata, target (point_diff)
+    Return select features to be used in model training.
     """
-    drop_cols = {
-        target_col,
-        "gamekey",
-        "date",
-        "seasontype",
-        "season",
-        "week",
-        "team",
-        "opponent",
-        "home_away",
-        "stadium",
-        "teamgameid",
-        "dayofweek",
-        "teamid",
-        "opponentid",
-        "scoreid",
-        "win",
-        "home",
-        "point_diff",
-        "points_for", 
-        "points_against", 
-        "timeofpossession",
-        "totalscore",
-        "opponenttimeofpossession",
-        "scorequarter1",
-        "scorequarter2",
-        "scorequarter3",
-        "scorequarter4",
-        "scoreovertime",
-        "opponentscorequarter1",
-        "opponentscorequarter2",
-        "opponentscorequarter3",
-        "opponentscorequarter4",
-        "opponentscoreovertime",
-        "opp_gamekey",
-        "opp_date",
-        "opp_seasontype",
-        "opp_season",
-        "opp_week",
-        "opp_team",
-        "opp_opponent",
-        "opp_home_away",
-        "opp_stadium",
-        "opp_teamgameid",
-        "opp_dayofweek",
-        "opp_teamid",
-        "opp_opponentid",
-        "opp_scoreid",
-        "opp_win",
-        "opp_home",
-        "opp_point_diff",
-        "opp_points_for", 
-        "opp_points_against", 
-        "opp_timeofpossession",
-        "opp_totalscore",
-        "opp_opponenttimeofpossession",
-        "opp_scorequarter1",
-        "opp_scorequarter2",
-        "opp_scorequarter3",
-        "opp_scorequarter4",
-        "opp_scoreovertime",
-        "opp_opponentscorequarter1",
-        "opp_opponentscorequarter2",
-        "opp_opponentscorequarter3",
-        "opp_opponentscorequarter4",
-        "opp_opponentscoreovertime",
-        "next_game_win"
-    }
-    
-    feature_cols = [c for c in df.columns if c not in drop_cols and pd.api.types.is_numeric_dtype(df[c])]
-    
-    return feature_cols
+    selected_features = [
+        # Vegas (scaled)
+        "vegas_spread",
+        "home_moneyline",
+        "away_moneyline",
+        "home_implied_prob",
 
+        # Elo ratings
+        "home_elo_pre",
+        "away_elo_pre",
+        "diff_elo_pre",
+
+        # SHAP
+        "opp_puntaverage",
+        "passingattempts",
+        "rushingyardsperattempt",
+        "opp_opponentpassingyardspercompletion",
+        "quarterbackhits",
+        "puntyards",
+        "opp_rolling_win_rate_5",
+        "timessackedyards",
+        "opp_opponentassistedtackles",
+        "opponentpenaltyyards",
+        "opponentrushingyards",
+        "opponenttimeofpossessionseconds",
+        "opp_solotackles",
+        "opp_opponenttimessackedyards",
+
+        # Rolling stability features
+        "team_rolling_yards_total_3",
+        "team_rolling_points_for_3",
+        "team_rolling_points_against_3",
+        "opp_rolling_yards_total_3",
+        "opp_rolling_points_for_3",
+        "opp_rolling_points_against_3",
+    ]
+    
+    final_cols = [c for c in selected_features if c in df.columns]
+    
+    missing = set(selected_features) - set(final_cols)
+    if missing:
+        print(f"[WARNING] Missing expected features: {missing}")
+    
+    return final_cols
+
+def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: str) -> dict:
+    """
+    Brute-force tune a small XGBoost hyperparameter grid using rolling season splits.
+    Train and validate models with different parameters. Evaluate parameters by 
+    lowest MAE, parameters resulting in lowest MAE are used for final model.
+    """
+
+    seasons = sorted(df["season"].unique())
+    
+    candidate_test_seasons = [s for s in seasons if s >= 2023]
+
+    logger.info(f"Hyperparameter tuning across test seasons: {candidate_test_seasons}")
+
+    param_grid = [
+        {"max_depth": 1, "min_child_weight": 8,  "subsample": 0.7, "colsample_bytree": 0.6, "reg_lambda": 2.0, "reg_alpha": 0.0},
+        {"max_depth": 1, "min_child_weight": 12, "subsample": 0.8, "colsample_bytree": 0.6, "reg_lambda": 3.0, "reg_alpha": 0.0},
+
+        {"max_depth": 2, "min_child_weight": 8,  "subsample": 0.7, "colsample_bytree": 0.6, "reg_lambda": 2.0, "reg_alpha": 0.5},
+        {"max_depth": 2, "min_child_weight": 12, "subsample": 0.8, "colsample_bytree": 0.7, "reg_lambda": 3.0, "reg_alpha": 0.5},
+
+        {"max_depth": 3, "min_child_weight": 10, "subsample": 0.7, "colsample_bytree": 0.5, "reg_lambda": 3.0, "reg_alpha": 1.0},
+    ]
+
+    best_params: dict | None = None
+    best_score = np.inf
+
+    X_full = df[feature_cols]
+    y_full = df[target_col]
+
+    for i, params in enumerate(param_grid, start=1):
+        logger.info(f"Testing param set {i}/{len(param_grid)}: {params}")
+        fold_maes: list[float] = []
+
+        for test_season in candidate_test_seasons:
+            train_mask = df["season"] < test_season
+            val_mask   = df["season"] == test_season
+
+            if train_mask.sum() == 0 or val_mask.sum() == 0:
+                continue
+
+            X_train = X_full[train_mask]
+            y_train = y_full[train_mask]
+            X_val   = X_full[val_mask]
+            y_val   = y_full[val_mask]
+
+            model = xgb.XGBRegressor(
+                objective="reg:squarederror",
+                n_estimators=600,
+                learning_rate=0.05,
+                eval_metric="rmse",
+                random_state=34,
+                n_jobs=1,
+                **params,
+            )
+
+            model.fit(X_train, y_train)
+            preds = model.predict(X_val)
+            mae = mean_absolute_error(y_val, preds)
+            fold_maes.append(mae)
+
+        if not fold_maes:
+            continue
+
+        avg_mae = float(np.mean(fold_maes))
+        logger.info(f"Param set {i}: avg validation MAE across seasons = {avg_mae:.3f}")
+
+        if avg_mae < best_score:
+            best_score = avg_mae
+            best_params = params
+
+    if best_params is None:
+        raise RuntimeError("Hyperparameter tuning failed: no valid folds/params evaluated.")
+
+    logger.success(f"Best params: {best_params} with avg MAE={best_score:.3f}")
+    return best_params
 
 @app.command()
 def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv", 
@@ -119,12 +216,11 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
     before_drop = len(df)
     df = df.dropna(subset=[target_col])
     logger.info(f"Dropped {before_drop - len(df)} rows with missing target column")
+    
+    df = scale_vegas_features(df)
 
     feature_cols = select_features(df, target_col)
     logger.info(f"Using {len(feature_cols)} features")
-    logger.info([col for col in feature_cols if "strength_" in col])
-    logger.info([c for c in feature_cols if "next" in c])
-    logger.info([c for c in feature_cols if "score" in c or "points_for" in c or "points_against" in c])
     
     df[feature_cols] = df[feature_cols].fillna(0)
     
@@ -134,88 +230,119 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
     df["next_game_win"] = (df[target_col] > 0).astype(int)
     win = df["next_game_win"]
     
-    train_set, val_set, test_set = make_splits(df)
+    splits = make_rolling_splits(df)
     
-    X_train, y_train = X[train_set], y[train_set]
-    X_val, y_val = X[val_set], y[val_set]
-    X_test, y_test = X[test_set], y[test_set]
+    all_metrics = []
     
-    win_train = win[train_set]
-    win_val   = win[val_set]
-    win_test  = win[test_set]
-    
-    # --- Sanity check: majority baseline on the SAME test split ---
-    majority_acc = win_test.mean()   # always predict "win" (1)
-    logger.info(f"Test majority baseline (always predict win): {majority_acc:.3f}")
-    
-    if "home" in df.columns:
-        home_pred = df.loc[test_set, "home"].astype(int)
-        home_acc = (home_pred == win_test).mean()
-        logger.info(f"Always-home baseline: {home_acc:.3f}")
-
-
-    
-    logger.info(f"Train: {len(X_train)} rows\nVal: {len(X_val)} rows\nTest: {len(X_test)} rows")
-    
-    model = xgb.XGBRegressor(
-        objective="reg:squarederror",
-        n_estimators=500,
-        learning_rate=0.05,
-        max_depth=1,
-        subsample=0.8,
-        colsample_bytree=0.8,
-        reg_lambda=1.0,
-        random_state=34,
-        n_jobs=1,
-        eval_metric="rmse"
-    )
-
-    logger.info("Training XGBoost Model...")
-    model.fit(
-        X_train,
-        y_train,
-        eval_set=[(X_train, y_train), (X_val, y_val)],
-        verbose=False
-    )
-    
-    def report_split(name: str, X_split, y_split, win_split):
-        predictions = model.predict(X_split)
-        mae = mean_absolute_error(y_split, predictions)
-        rmse = root_mean_squared_error(y_split, predictions)
-        r2 = r2_score(y_split, predictions)
+    for split in splits:
+        test_season = split["test_season"]
+        train_set = split["train_split"]
+        val_set = split["val_split"]
+        test_set = split["test_split"]
         
-        pred_win = (predictions > 0).astype(int)
-        win_acc = (pred_win == win_split).mean()
+        X_train, y_train = X[train_set], y[train_set]
+        X_val, y_val = X[val_set], y[val_set]
+        X_test, y_test = X[test_set], y[test_set]
         
-        logger.info(f"{name} MAE={mae} | RMSE={rmse} | R2={r2} | WIN ACCURACY={win_acc:.3f}")
+        win_train = win[train_set]
+        win_val = win[val_set]
+        win_test = win[test_set]
+        
+        logger.info(
+            f"\n==== Rolling split: Test season {test_season} ====\n"
+            f"Train: {len(X_train)} rows | Val: {len(X_val)} rows | Test: {len(X_test)} rows"
+        )
+        
+        majority_acc = win_test.mean()
+        logger.info(f"[Season {test_season}] Test majority baseline (always predict win): {majority_acc:.3f}")
     
-    report_split("Train", X_train, y_train, win_train)
-    report_split("Val", X_val, y_val, win_val)
-    if len(X_test) > 0:
-        report_split("Test", X_test, y_test, win_test)
-    
-        pred_win_test = (model.predict(X_test) > 0).astype(int)
-        cm = confusion_matrix(win_test, pred_win_test)
+        if "home" in df.columns:
+            home_pred = df.loc[test_set, "home"].astype(int)
+            home_acc = (home_pred == win_test).mean()
+            logger.info(f"[Season {test_season}] Always-home baseline: {home_acc:.3f}")
 
-        logger.info(f"Confusion matrix (Test):\n{cm}")
+        best_params = tune_xgb_hyperparams(df, feature_cols, target_col)
+        model = xgb.XGBRegressor(
+            objective="reg:squarederror",
+            n_estimators=600,
+            learning_rate=0.05,
+            eval_metric="rmse",
+            random_state=34,
+            n_jobs=1,
+            **best_params,
+        )
+
+        logger.info(f"[Season {test_season}] Training XGBoost model...")
+        model.fit(
+            X_train,
+            y_train,
+            eval_set=[(X_train, y_train), (X_val, y_val)],
+            verbose=False
+        )
     
-        precision = precision_score(win_test, pred_win_test)
-        recall = recall_score(win_test, pred_win_test)
-        logger.info(f"Precision: {precision} | Recall: {recall}")
+        def report_split(name: str, X_split, y_split, win_split):
+            predictions = model.predict(X_split)
+            mae = mean_absolute_error(y_split, predictions)
+            rmse = root_mean_squared_error(y_split, predictions)
+            r2 = r2_score(y_split, predictions)
+            
+            pred_win = (predictions > 0).astype(int)
+            win_acc = (pred_win == win_split).mean()
+            
+            logger.info(
+                f"[Season {test_season}] {name} "
+                f"MAE={mae:.3f} | RMSE={rmse:.3f} | R2={r2:.3f} | WIN ACCURACY={win_acc:.3f}"
+            )
+            return mae, rmse, r2, win_acc
+    
+        report_split("Train", X_train, y_train, win_train)
+        report_split("Val", X_val, y_val, win_val)
+        mae_test, rmse_test, r2_test, winacc_test = report_split("Test",  X_test,  y_test,  win_test)
         
-            # --- Spread MAE for Test Set ---
         preds_test = model.predict(X_test)
         spread_mae = np.mean(np.abs(preds_test - y_test))
-        logger.info(f"Test Spread MAE (avg point error): {spread_mae:.3f}")
-        
         spread_bias = np.mean(preds_test - y_test)
-        logger.info(f"Spread Bias (positive = overpredicting home): {spread_bias:.3f}")
+        logger.info(f"[Season {test_season}] Test Spread MAE: {spread_mae:.3f}")
+        logger.info(f"[Season {test_season}] Spread Bias (positive = overpredicting home): {spread_bias:.3f}")
+        
+        all_metrics.append({
+            "test_season": test_season,
+            "test_MAE": mae_test,
+            "test_RMSE": rmse_test,
+            "test_R2": r2_test,
+            "test_WIN_ACC": winacc_test,
+            "test_Spread_MAE": spread_mae,
+            "test_Spread_Bias": spread_bias,
+        })
+    
+    logger.info("=== Summary across test seasons ===")
+    for m in all_metrics:
+        logger.info(m)
+    
+    max_season = df["season"].max()
+    final_train_mask = df["season"] < max_season  # train on all completed seasons
+    X_final = X[final_train_mask]
+    y_final = y[final_train_mask]
+    
+    best_params = tune_xgb_hyperparams(df, feature_cols, target_col)
+    final_model = xgb.XGBRegressor(
+        objective="reg:squarederror",
+        n_estimators=600,
+        learning_rate=0.05,
+        eval_metric="rmse",
+        random_state=34,
+        n_jobs=1,
+        **best_params,
+    )
+        
+    logger.info(f"Training FINAL model on seasons < {max_season} ...")
+    final_model.fit(X_final, y_final, verbose=False)
         
     model_path.parent.mkdir(parents=True, exist_ok=True)
     with open(model_path, "wb") as file:
-        pickle.dump({"model": model, "features": feature_cols}, file)
+        pickle.dump({"model": final_model, "features": feature_cols}, file)
     
-    logger.success(f"Saved trained model to {model_path}")
+    logger.success(f"Saved FINAL trained model to {model_path}")
 
 if __name__ == "__main__":
     app()

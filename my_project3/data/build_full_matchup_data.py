@@ -1,13 +1,31 @@
 import pandas as pd
 from pathlib import Path
-from my_project3.config import MATCHUPS_DATA_DIR
+from my_project3.config import MATCHUPS_DATA_DIR, ODDS_PROC_DIR
 from my_project3.data.team_ratings import add_elo_features
 
 
 MATCHUP_DIR = MATCHUPS_DATA_DIR
 OUTPUT_PATH = MATCHUP_DIR / "matchups_all_seasons.csv"
 
+def load_all_odds() -> pd.DataFrame:
+    """
+    Load all processed odds files.
+    """
+    files = sorted(ODDS_PROC_DIR.glob("odds_*_week*.csv"))
+    if not files:
+        print("[WARNING] No odds files found; vegas lines will be missing.")
+        return pd.DataFrame()
+    
+    frames = [pd.read_csv(file) for file in files]
+    odds = pd.concat(frames, ignore_index=True)
+    
+    return odds
+    
 def combine_matchups():
+    """
+    Combines all season matchups datasets into one big dataset for seasons 
+    2022-2025. Adds elo ratings and vegas odds to dataset.
+    """
     all_dfs = []
     for season in ["2022", "2023", "2024", "2025"]:
         file_path = MATCHUP_DIR / f"matchups_{season}.csv"
@@ -40,6 +58,38 @@ def combine_matchups():
             full_df = full_df.sort_values(["season", "week", "gamekey"])
         
         full_df = add_elo_features(full_df)
+        
+        odds_all = load_all_odds()
+        if not odds_all.empty:
+            odds_for_merge = odds_all.rename(
+                columns={
+                    "home_team": "team",
+                    "away_team": "opponent"
+                }
+            )
+        
+            full_df = full_df.merge(
+                odds_for_merge, 
+                on=["season", "week", "team", "opponent"],
+                how="left",
+            )
+            
+            vegas_cols = [
+                "home_moneyline",
+                "away_moneyline",
+                "home_implied_prob",
+                "vegas_spread",
+                "vegas_total",
+            ]
+            
+            for col in vegas_cols:
+                if col in full_df.columns:
+                    if "moneyline" in col:
+                        full_df[col] = full_df[col].clip(-300, 300)
+                    
+                    full_df[col] = full_df[col] * 0.1
+        else:
+            print("No odds merged (no odds data found).")
         
         full_df.to_csv(OUTPUT_PATH, index=False)
         print(f"\nCombined dataset saved to: {OUTPUT_PATH}")

@@ -35,6 +35,9 @@ def add_matchup_strength_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 def build_matchups_for_season(season: str):
+    """
+    Creates all weekly matchups for a given season.
+    """
     print(f"\nBuilding matchup data for season {season}...")
 
     season_dir = FEATURE_DIR / season
@@ -61,6 +64,7 @@ def build_matchups_for_season(season: str):
         matchups = matchups.sort_values(by="week").reset_index(drop=True)
 
     matchups = add_matchup_strength_features(matchups)
+    
     out_path = OUTPUT_DIR / f"matchups_{season}.csv"
     matchups.to_csv(out_path, index=False)
     print(f"Saved {len(matchups)} games to {out_path}")

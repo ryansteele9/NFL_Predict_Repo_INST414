@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 from dotenv import load_dotenv
 from loguru import logger
@@ -18,8 +19,12 @@ EXTERNAL_DATA_DIR  = DATA_DIR / "external"
 FEATURES_DATA_DIR  = DATA_DIR / "features"
 MATCHUPS_DATA_DIR  = DATA_DIR / "matchups"
 TEAMS_DATA_DIR     = DATA_DIR / "teams"
+ODDS_RAW_DIR       = RAW_DATA_DIR / "odds"
+ODDS_PROC_DIR      = PROCESSED_DATA_DIR / "odds"
 
 MODELS_DIR         = PROJ_ROOT / "my_project3" / "modeling"
+
+SPORTSDATAIO_API_KEY = os.getenv("SPORTSDATAIO_API_KEY")
 
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135

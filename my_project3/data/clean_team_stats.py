@@ -6,6 +6,10 @@ PROC_DIR = PROCESSED_DATA_DIR
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 
 def clean_season(season: str):
+    """
+    Clean team stats dataset for a given season, rename some features, and 
+    compute some basic features.
+    """
     file_path = RAW_DIR / f"team_stats_{season}REG_all_weeks.csv"
 
     if not file_path.exists():
