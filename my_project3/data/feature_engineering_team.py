@@ -2,11 +2,15 @@ import pandas as pd
 import numpy as np
 from loguru import logger
 from pathlib import Path
-from my_project3.config import TEAMS_DATA_DIR, FEATURES_DATA_DIR 
+
+from my_project3.config import TEAMS_DATA_DIR, FEATURES_DATA_DIR
+from my_project3.data.nflfastr_epa import load_nflfastr_team_epa
 
 TEAM_DIR = TEAMS_DATA_DIR
 FEATURE_DIR = FEATURES_DATA_DIR 
 FEATURE_DIR.mkdir(parents=True, exist_ok=True)
+
+NFLFASTR_EPA = load_nflfastr_team_epa()
 
 def add_future_dummy_week(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -47,26 +51,67 @@ def add_team_features(team_file_path):
     Adds rolling and cumulative features to a single team-season file.
     """
     df = pd.read_csv(team_file_path)
-
     df = df.sort_values(by="week").reset_index(drop=True)
+    
+    season = int(df["season"].iloc[0])
+    team = df["team"].iloc[0]
+    
+    epa_slice = NFLFASTR_EPA.query("season == @season & team == @team")
+    
+    df = df.merge(
+        epa_slice[
+            [
+                "season", "week", "team",
+                "off_epa_per_play",
+                "off_success_rate",
+                "off_dropback_epa",
+                "off_rush_epa",
 
-    df["rolling_points_for_3"] = df["points_for"].shift(1).rolling(3).mean()
-    df["rolling_points_against_3"] = df["points_against"].shift(1).rolling(3).mean()
-    df["rolling_point_diff_3"] = df["point_diff"].shift(1).rolling(3).mean()
+                "def_epa_per_play",
+                "def_success_rate",
+                "def_dropback_epa_against",
+                "def_rush_epa_against",
+            ]
+        ],
+        how="left",
+        on=["season", "week", "team"],
+    )
+
+    df["rolling_points_for_3"] = df["points_for"].shift(1).rolling(window=3, min_periods=1).mean()
+    df["rolling_points_against_3"] = df["points_against"].shift(1).rolling(window=3, min_periods=1).mean()
+    df["rolling_point_diff_3"] = df["point_diff"].shift(1).rolling(window=3, min_periods=1).mean()
 
     if "offensiveyards" in df.columns:
-        df["rolling_yards_total_3"] = df["offensiveyards"].shift(1).rolling(3).mean()
+        df["rolling_yards_total_3"] = df["offensiveyards"].shift(1).rolling(window=3, min_periods=1).mean()
     if "opponentoffensiveyards" in df.columns:
-        df["rolling_yards_allowed_3"] = df["opponentoffensiveyards"].shift(1).rolling(3).mean()
+        df["rolling_yards_allowed_3"] = df["opponentoffensiveyards"].shift(1).rolling(window=3, min_periods=1).mean()
     if "turnover_diff" in df.columns:
-        df["rolling_turnover_diff_3"] = df["turnover_diff"].shift(1).rolling(3).mean()
+        df["rolling_turnover_diff_3"] = df["turnover_diff"].shift(1).rolling(window=3, min_periods=1).mean()
     if "third_down_pct" in df.columns:
-        df["rolling_third_down_pct_3"] = df["third_down_pct"].shift(1).rolling(3).mean()
+        df["rolling_third_down_pct_3"] = df["third_down_pct"].shift(1).rolling(window=3, min_periods=1).mean()
 
-    df["rolling_win_rate_5"] = df["win"].shift(1).rolling(5).mean()
+    df["rolling_win_rate_5"] = df["win"].shift(1).rolling(window=5, min_periods=1).mean()
     df["cumulative_points_for"] = df["points_for"].shift(1).cumsum()
     df["cumulative_points_against"] = df["points_against"].shift(1).cumsum()
     df["cumulative_wins"] = df["win"].shift(1).cumsum()
+    
+    EPA_COLS = [
+        "off_epa_per_play",
+        "off_success_rate",
+        "off_dropback_epa",
+        "off_rush_epa",
+        "def_epa_per_play",
+        "def_success_rate",
+        "def_dropback_epa_against",
+        "def_rush_epa_against",
+    ]
+    
+    for col in EPA_COLS:
+        if col in df.columns:
+            df[f"{col}_rolling_3"] = df[col].shift(1).rolling(window=3, min_periods=1).mean()
+    
+    df["off_epa_per_play_rolling_5"] = df["off_epa_per_play"].shift(1).rolling(window=5, min_periods=1).mean()
+    df["def_epa_per_play_rolling_5"] = df["def_epa_per_play"].shift(1).rolling(window=5, min_periods=1).mean()
     
     do_not_lag = {
         "gamekey", "season", "week", "date", "team", "opponent", "home_away", 
@@ -74,14 +119,21 @@ def add_team_features(team_file_path):
         "points_for", "points_against", "point_diff", "totalscore", 
         "scorequarter1", "scorequarter2", "scorequarter3", "scorequarter4", 
         "scoreovertime", "opponentscorequarter1", "opponentscorequarter2", 
-        "opponentscorequarter3", "opponentscorequarter4", "opponentscoreovertime"
+        "opponentscorequarter3", "opponentscorequarter4", "opponentscoreovertime",
+        "seasontype"
     }
     
     already_shifted = {
         "rolling_points_for_3", "rolling_points_against_3", 
         "rolling_point_diff_3", "rolling_yards_total_3", "rolling_yards_allowed_3", 
         "rolling_turnover_diff_3", "rolling_third_down_pct_3", "rolling_win_rate_5", 
-        "cumulative_points_for", "cumulative_points_against", "cumulative_wins"
+        "cumulative_points_for", "cumulative_points_against", "cumulative_wins", 
+        "off_epa_per_play_rolling_3", "off_success_rate_rolling_3",
+        "off_dropback_epa_rolling_3", "off_rush_epa_rolling_3",
+        "def_epa_per_play_rolling_3", "def_success_rate_rolling_3",
+        "def_dropback_epa_against_rolling_3", "def_rush_epa_against_rolling_3",
+        "epa_def_diff_rolling_3", "epa_off_diff_rolling_3", 
+        "def_epa_per_play_rolling_5", "off_epa_per_play_rolling_5"
     }
     
     feature_cols = [

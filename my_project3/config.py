@@ -13,14 +13,16 @@ logger.info(f"PROJ_ROOT path is: {PROJ_ROOT}")
 
 DATA_DIR           = PROJ_ROOT / "data"
 RAW_DATA_DIR       = DATA_DIR / "raw"
+EXTERNAL_DIR       = DATA_DIR/ "external"
 INTERIM_DATA_DIR   = DATA_DIR / "interim"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
-EXTERNAL_DATA_DIR  = DATA_DIR / "external"
 FEATURES_DATA_DIR  = DATA_DIR / "features"
 MATCHUPS_DATA_DIR  = DATA_DIR / "matchups"
 TEAMS_DATA_DIR     = DATA_DIR / "teams"
 ODDS_RAW_DIR       = RAW_DATA_DIR / "odds"
 ODDS_PROC_DIR      = PROCESSED_DATA_DIR / "odds"
+INJURIES_RAW_DIR   = EXTERNAL_DIR / "injuries"
+INJURIES_PROC_DIR  = PROCESSED_DATA_DIR / "injuries"
 
 MODELS_DIR         = PROJ_ROOT / "my_project3" / "modeling"
 

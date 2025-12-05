@@ -87,7 +87,6 @@ def combine_matchups():
                     if "moneyline" in col:
                         full_df[col] = full_df[col].clip(-300, 300)
                     
-                    full_df[col] = full_df[col] * 0.1
         else:
             print("No odds merged (no odds data found).")
         

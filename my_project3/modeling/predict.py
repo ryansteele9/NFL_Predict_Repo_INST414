@@ -11,7 +11,8 @@ import requests
 
 from my_project3.data.build_matchup_data import add_matchup_strength_features
 from my_project3.data.team_ratings import get_elo_ratings_to_week
-from my_project3.data.download_odds import fetch_odds, parse_odds_response
+from my_project3.data.injury_adjust import compute_team_injury_adjustments, apply_injury_adjustments
+from my_project3.data.build_matchup_data import add_matchup_strength_features
 from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR, FEATURES_DATA_DIR, RAW_DATA_DIR, ODDS_PROC_DIR
 
 app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
@@ -285,12 +286,19 @@ def add_predictions(df_games: pd.DataFrame, model, feature_cols: List[str]) -> p
     
     return df_games
 
-def print_pred_results(df_pred: pd.DataFrame) -> None:
+def print_pred_results(df_pred: pd.DataFrame):
     cols = [col for col in ["season", "week", "game_id", "home_team", "away_team"] if col in df_pred.columns]
-    cols += ["pred_point_diff", "pred_winner", "pred_home_win_prob"]
+    if "point_diff_adj" in df_pred:
+        cols += ["point_diff_adj", "inj_adj_team", "inj_adj_opp"]
+    else:
+        cols += ["pred_point_diff"]
+    cols += ["pred_winner", "pred_home_win_prob"]
     
     output = df_pred[cols].copy()
-    output["pred_point_diff"] = output["pred_point_diff"].round(2)
+    if "point_diff_adj" in df_pred:
+        output["point_diff_adj"] = output["point_diff_adj"].round(2)
+    else:
+        output["pred_point_diff"] = output["pred_point_diff"].round(2)
     output["pred_home_win_prob"] = output["pred_home_win_prob"].round(3)
     print()
     print(output.to_string(index=False))
@@ -348,6 +356,19 @@ def main(
         logger.info(f"Saved future matchups to {out_path}")
     
     df_pred = add_predictions(df_matchups, model, feature_cols)
+    
+    injuries_dir = Path("data/processed/injuries")
+    inj_path = injuries_dir / f"injuries_week{week:02d}_curated.csv"
+    
+    if inj_path.exists():
+        logger.info(f"Loading injury adjustments from {inj_path}")
+        inj_df = pd.read_csv(inj_path)
+        
+        team_adj = compute_team_injury_adjustments(inj_df)
+        df_pred = apply_injury_adjustments(df_pred, team_adj)
+    else:
+        logger.warning(f"No injury file found at {inj_path}; predictions are unadjusted.")
+    
     print_pred_results(df_pred)
     
     logger.success("Prediction Complete.")

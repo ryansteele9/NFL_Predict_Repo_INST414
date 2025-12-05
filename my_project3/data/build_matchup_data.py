@@ -32,6 +32,17 @@ def add_matchup_strength_features(df: pd.DataFrame) -> pd.DataFrame:
             df[diff_name] = df[home_col] - df[opp_col]
             df[sum_name] = df[home_col] + df[opp_col]
     
+    if "off_epa_per_play_rolling_3" and "opp_off_epa_per_play_rolling_3" in df.columns:
+        df["epa_off_diff_rolling_3"] = (
+            df["off_epa_per_play_rolling_3"] 
+            - df["opp_off_epa_per_play_rolling_3"]
+        )
+    if "def_epa_per_play_rolling_3" and "opp_def_epa_per_play_rolling_3" in df.columns:
+        df["epa_def_diff_rolling_3"] = (
+            df["def_epa_per_play_rolling_3"] 
+            - df["opp_def_epa_per_play_rolling_3"]
+        )
+    
     return df
 
 def build_matchups_for_season(season: str):
