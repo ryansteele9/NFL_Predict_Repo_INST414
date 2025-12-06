@@ -33,8 +33,8 @@ app = typer.Typer()
 VEGAS_SCALE_MAP = {
     "home_moneyline": 0.0,
     "away_moneyline": 0.0,
-    "home_implied_prob": 0.15,
-    "vegas_spread": 0.1,
+    "home_implied_prob": 1,
+    "vegas_spread": 1,
 }
 
 def scale_vegas_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -264,6 +264,44 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
             "test_Spread_MAE": spread_mae,
             "test_Spread_Bias": spread_bias,
         })
+        
+        reports_dir = Path("reports")
+        reports_dir.mkdir(parents=True, exist_ok=True)
+        
+        result_cols = [
+    "season",
+    "week",
+    "team",
+    "opponent",
+    "home",              # if present
+    "vegas_spread",
+    "home_implied_prob",
+]
+
+        # Filter to only those that actually exist in df (avoids KeyErrors)
+        result_cols = [c for c in result_cols if c in df.columns]
+
+        # ---------- TEST RESULTS ----------
+        test_base = df.loc[test_set, result_cols].copy()
+
+        test_base["y_true"] = y_test.values
+        test_base["y_pred"] = model.predict(X_test)
+        test_base["residual"] = test_base["y_pred"] - test_base["y_true"]
+        test_base["abs_residual"] = test_base["residual"].abs()
+
+        test_base.to_csv(reports_dir / f"predictions_test_{test_season}.csv", index=False)
+
+        # ---------- TRAIN RESULTS (optional, but nice to have) ----------
+        train_base = df.loc[train_set, result_cols].copy()
+
+        train_base["y_true"] = y_train.values
+        train_base["y_pred"] = model.predict(X_train)
+        train_base["residual"] = train_base["y_pred"] - train_base["y_true"]
+        train_base["abs_residual"] = train_base["residual"].abs()
+
+        train_base.to_csv(reports_dir / f"predictions_train_{test_season}.csv", index=False)
+        
+        logger.info(f"Saved predictions for season {test_season}\n")
     
 
     final_train_mask = df["point_diff"].notna()

@@ -1,1 +1,1 @@
-from my_project3 import config  # noqa: F401
+from nfl_prediction import config  # noqa: F401
