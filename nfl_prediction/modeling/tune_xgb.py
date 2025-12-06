@@ -1,3 +1,8 @@
+"""
+Helper function that tunes hyperparameters for model. Uses grid-search to train
+model on different sets of parameters. Returns parameters that give best mean
+absolute error. Used to get parameters for model in train.py.
+"""
 import pandas as pd
 from loguru import logger
 
@@ -21,15 +26,12 @@ def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: 
     logger.info(f"Hyperparameter tuning across test seasons: {candidate_test_seasons}")
 
     param_grid = [
-        # Very simple / heavily regularized
         {"max_depth": 1, "min_child_weight": 10, "subsample": 0.8, "colsample_bytree": 0.6, "reg_lambda": 2.0, "reg_alpha": 0.0},
         {"max_depth": 1, "min_child_weight": 14, "subsample": 0.9, "colsample_bytree": 0.6, "reg_lambda": 3.0, "reg_alpha": 0.0},
 
-        # Slightly deeper, still constrained
         {"max_depth": 2, "min_child_weight": 10, "subsample": 0.8, "colsample_bytree": 0.6, "reg_lambda": 2.0, "reg_alpha": 0.2},
         {"max_depth": 2, "min_child_weight": 14, "subsample": 0.8, "colsample_bytree": 0.7, "reg_lambda": 3.0, "reg_alpha": 0.3},
 
-        # Tiny bit more expressive
         {"max_depth": 2, "min_child_weight": 8,  "subsample": 0.9, "colsample_bytree": 0.7, "reg_lambda": 2.0, "reg_alpha": 0.5},
         {"max_depth": 3, "min_child_weight": 12, "subsample": 0.8, "colsample_bytree": 0.5, "reg_lambda": 3.0, "reg_alpha": 0.5},
     ]

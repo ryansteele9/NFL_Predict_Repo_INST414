@@ -1,3 +1,9 @@
+"""
+Functions compute injury weights and positional weights for predicting future
+game outcomes (not for training, adjusts predicted point differentials based
+on injury data). Applies adjustments to prediction DataFrame. Functions
+implemented in predict.py.
+"""
 import pandas as pd
 
 STATUS_MAP = {

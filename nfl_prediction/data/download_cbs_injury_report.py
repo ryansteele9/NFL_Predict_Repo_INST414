@@ -1,3 +1,7 @@
+"""
+Downloads current injury report from CBS sports and saves raw 
+file to: raw/injuries.
+"""
 import pandas as pd
 from nfl_prediction.config import INJURIES_RAW_DIR
 

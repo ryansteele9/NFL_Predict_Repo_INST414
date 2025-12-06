@@ -1,3 +1,19 @@
+"""
+Input:
+    All team files for each season
+    nflfastR EPA metrics file (all seasons 2022-2025)
+
+Adds computes and adds features to team files such as rolling averages,
+EPA-related metrics (from nflfastR) and cumulative stats. Lags data so that for
+a given game, statistics columns contain data for the next game. This is so that
+when training model to predict point differential, model doesn't have access to
+stats from the game(s) it is trying to predict. Prevents leakage. Adds dummy 
+week so that when lagging the statistics columns, statistics from final week in
+season isn't lost and can be used to predict future games.
+
+Returns: 
+    Team files for each season with new features, saved to: processed/features/
+"""
 import pandas as pd
 import numpy as np
 

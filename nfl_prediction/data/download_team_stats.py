@@ -1,3 +1,10 @@
+"""
+Downloads team-level stats for each season (2022-2025) and week (1-18) from
+SportsDataIO API TeamGameStats endpoint. Saves raw JSON files to 
+data/raw/sdio_json/. Saves raw CSV files to data/raw/team_stats_csv/. 
+Concatenates all weekly CSV files into one file for each season, saved to 
+data/raw/team_stats_csv/.
+"""
 import os
 import time
 import json

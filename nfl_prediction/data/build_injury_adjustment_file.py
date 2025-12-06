@@ -1,3 +1,11 @@
+"""
+Input: cleaned injury report.
+Raw injury report has to be manually filtered, keeping only starters. There is 
+no way to get accurate injury data and map that to depth chart data. Once
+manually filtered, script cleans file for post-processing injury adjustment.
+
+Saves cleaned and filtered injury report file to: processed/injuries/
+"""
 import pandas as pd
 from pathlib import Path
 

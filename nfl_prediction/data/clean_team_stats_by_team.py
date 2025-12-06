@@ -1,3 +1,10 @@
+"""
+Input: Cleaned team-level files for each season (2022-2025)
+
+Splits season files into one file per team.
+
+Returns: Team files for each season, saved to: processed/teams/
+"""
 import pandas as pd
 from nfl_prediction.config import TEAMS_DIR, CLEAN_STATS_DIR
 

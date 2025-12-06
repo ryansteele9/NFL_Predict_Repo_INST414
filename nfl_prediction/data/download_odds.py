@@ -1,3 +1,11 @@
+"""
+Downloads Vegas odds from SportsDataIO API GameOddsByWeek endpoint. Coverts odds
+to probabilities.
+
+Returns:
+    Raw Vegas odds files, saved to: raw/odds/
+    Processed Vegas odds files, saved to: processed/odds
+"""
 import argparse
 import numpy as np
 import requests

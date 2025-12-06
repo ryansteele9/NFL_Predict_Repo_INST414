@@ -1,3 +1,16 @@
+"""
+Predicts the point differentials for given future week. Pulls NFl schedule for
+given season and week from SportsDataIO API and builds matchup DataFrame for
+these future matchups. Adds adds features to ensure future matchup df has
+same structure as the DataFrame used for training model. Loads trained model and
+adds model's predictions to df. Then, adjusts for injuries using injury
+adjustment functions and prints adjusted predicted point differentials for
+each matchup in week.
+
+Args:
+    season (int): NFL season to predict
+    week (int): NFL week to predict
+"""
 from pathlib import Path
 import pickle
 from typing import Optional, List

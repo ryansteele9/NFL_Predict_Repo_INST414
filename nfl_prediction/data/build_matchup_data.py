@@ -1,3 +1,13 @@
+"""
+Input: Team files with engineered features
+
+Creates matchup-level datasets for each season. Joins rows from each team file
+to their opponent's team file for each week (row). Adds strength 
+features (difference between key metrics for team and opponent) to quantify
+matchups.
+
+Returns: Matchup-level files for each season, saved to: processed/matchups/
+"""
 import pandas as pd
 
 from nfl_prediction.config import FEATURES_DIR, MATCHUPS_DIR

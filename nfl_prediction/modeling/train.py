@@ -1,3 +1,20 @@
+"""
+Model choice: XGBoost Regressor
+
+Scales Vegas odds (scaled very low to limit impact on model), makes rolling
+time-splits for training, selects features for training, and 
+trains/validates/tests on rolling time-splits. Rolling time splits works as
+follows: for season s, train: seasons < s, validate: s weeks 1-5, test: s weeks 6+.
+Hyperparameters are determined via grid-search. 
+
+Evaluation metrics used are mean absolute error, root mean squared error, r2, 
+and win accuracy (classification). Win accuracy is determined by checking if the
+predicted point differential picks the correct winner, where a positive
+point differential indicates the home team is predicted to win, negative: away.
+Percentage of wins correctly predicted = win accuracy.
+
+Trains final XGBoost model on all available data and saves to models/.
+"""
 from pathlib import Path
 import pickle
 

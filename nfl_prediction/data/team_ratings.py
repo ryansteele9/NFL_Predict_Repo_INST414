@@ -1,3 +1,7 @@
+"""
+Functions that compute elo features given a matchup-level dataset. Functions
+implemented in build_full_matchup_data.py.
+"""
 import pandas as pd
 from typing import Dict, Tuple
 

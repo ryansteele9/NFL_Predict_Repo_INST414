@@ -1,3 +1,9 @@
+"""
+Input: Matchup-level files
+Combines matchup-level files into one big file for all seasons. Adds elo rating
+features to quantify team strength.
+File saved to: processed/matchups
+"""
 import pandas as pd
 
 from nfl_prediction.config import MATCHUPS_DIR, ODDS_PROC_DIR

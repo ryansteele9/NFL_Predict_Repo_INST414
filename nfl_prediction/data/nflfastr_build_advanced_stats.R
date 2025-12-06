@@ -1,3 +1,9 @@
+"""
+Downloads play-by-play EPA statistics from nflfastR and computes EPA 
+related metrics. Groups play-by-play data into data for each game and joins all
+data into one big file for all games in all seasons (2022-2025). 
+File saved to: data/external/nflfastr/team_game_advanced_2022_2025.csv
+"""
 library(dplyr)
 library(nflfastR)
 library(nflreadr)

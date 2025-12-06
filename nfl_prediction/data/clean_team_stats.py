@@ -1,3 +1,12 @@
+"""
+Input: Team-level files for each season (2022-2025)
+
+Renames some column names and computes statistics like 
+point differential (target variable) and win (bool).
+
+Returns: cleaned team-level file for each season saved to: 
+    processed/clean_team_stats_season/
+"""
 import pandas as pd
 from nfl_prediction.config import PROC_DIR, RAW_STATS_CSV, CLEAN_STATS_DIR
 

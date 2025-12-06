@@ -1,3 +1,7 @@
+"""
+Helper function that loads EPA metrics from nflfastR. Function implemented in 
+feature_engineering_team.py.
+"""
 import pandas as pd
 
 from nfl_prediction.config import EXTERNAL_DIR
