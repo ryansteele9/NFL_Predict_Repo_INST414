@@ -104,8 +104,6 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
     selected_features = [
         # Vegas (scaled)
         "vegas_spread",
-        "home_moneyline",
-        "away_moneyline",
         "home_implied_prob",
 
         # Elo ratings
@@ -113,21 +111,13 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
         "away_elo_pre",
         "diff_elo_pre",
 
-        # SHAP
-        # "opp_puntaverage",
+        # Some standard NFL stats
         "passingattempts",
         "rushingyardsperattempt",
-        # "opp_opponentpassingyardspercompletion",
         "quarterbackhits",
-        # "puntyards",
         "opp_rolling_win_rate_5",
         "timessackedyards",
-        # "opp_opponentassistedtackles",
         "opponentpenaltyyards",
-        # "opponentrushingyards",
-        # "opponenttimeofpossessionseconds",
-        # "opp_solotackles",
-        # "opp_opponenttimessackedyards",
 
         # Rolling stability features
         "rolling_yards_total_3",

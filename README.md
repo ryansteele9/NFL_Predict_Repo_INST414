@@ -148,9 +148,9 @@ None of the steps in the pipeline require parameters.
 ### Test split results for seasons 2023-2025
 | season | MAE | RMSE | R² | Win Accuracy |
 |:------:|:---:|:----:|:--:|:------------:|
-| 2023 | 9.912 | 12.422 | 0.141 | 61.3% |
-| 2024 | 9.618 | 12.544 | 0.279 | 71.1% |
-| 2025 | 9.896 | 11.981 | 0.232 | 66.7% |
+| 2023 | 9.935 | 12.436 | 0.139 | 62.9% |
+| 2024 | 9.607 | 12.493 | 0.286 | 72.2% |
+| 2025 | 9.902 | 11.987 | 0.231 | 66.7% |
 
 Uses rolling time-series splits, where for season s:
 - Train on seasons < s
@@ -216,15 +216,20 @@ my_repo2/
 |       └── predict.py  ← Creates matchups for upcoming week and makes point spread predictions
 │
 ├── notebooks/
-|   ├── multivariate_aalysis.ipynb  ← EDA: Multivariate Analysis
-│   ├── univariate_analysis.ipynb   ← EDA: Univariate Analysis
-|   ├── verify_odds.ipynb
-|   ├── feature_selection.ipynb
-|   └── cbs_injury_report.ipynb
+|   ├── multivariate_aalysis.ipynb      ← EDA: Multivariate Analysis
+│   ├── univariate_analysis.ipynb       ← EDA: Univariate Analysis
+|   ├── verify_odds.ipynb               ← Debug vegas odds
+|   ├── cbs_injury_report.ipynb         ← Debug injury report
+|   ├── baseline_model.ipynb            ← Baseline models for comparison
+|   ├── model_comparison.ipynb          ← Comparing XGBoost vs. RandomForest
+|   ├── feature_importance.ipynb        ← Feature importance to XGBoost model
+|   └── regression_diagnostics.ipynb    ← Residual/Errors plots & distributions
 │
 ├── reports/                          ← Final reports, EDA summaries
 |   ├── variable_inventory.py         ← Creates CSV file with variable information
-|   └── variable_inventory.csv        ← CSV file with variable information
+|   ├── variable_inventory.csv        ← CSV file with variable information
+|   ├── predictions_test*.csv         ← prediction test set data
+|   └── predictions_train*.csv        ← prediction train set data
 |
 ├── models/                   ← Trained models
 |   └── xgb_point_diff.pkl    ← Trained XGBoost model for point differential
