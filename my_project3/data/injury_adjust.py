@@ -3,19 +3,19 @@ import pandas as pd
 STATUS_MAP = {
     "out": 1.0,
     "doubtful": 1.0,
-    "questionable": 0.2,
-    "ir": -0.35,
-    "pup": -0.2,
+    "questionable": 0.5,
+    "ir": -0.6,
+    "pup": -0.35,
 }
 
 
 POS_WEIGHT = {
-    "QB": 5.0,
-    "OL": 1.0,
-    "WR_TE": 0.9,
-    "RB": 0.4,
-    "DB": 0.8,
-    "FRONT7": 0.6,
+    "QB": 6.0,
+    "OL": 1.4,
+    "WR_TE": 2.3,
+    "RB": 0.5,
+    "DB": 1.1,
+    "FRONT7": 1.0,
 }
 
 def compute_team_injury_adjustments(inj_df: pd.DataFrame) -> pd.DataFrame:

@@ -290,8 +290,8 @@ def print_pred_results(df_pred: pd.DataFrame):
     cols = [col for col in ["season", "week", "game_id", "home_team", "away_team"] if col in df_pred.columns]
     if "point_diff_adj" in df_pred:
         cols += ["point_diff_adj", "inj_adj_team", "inj_adj_opp"]
-    else:
-        cols += ["pred_point_diff"]
+    
+    cols += ["pred_point_diff"]
     cols += ["pred_winner", "pred_home_win_prob"]
     
     output = df_pred[cols].copy()
@@ -299,7 +299,9 @@ def print_pred_results(df_pred: pd.DataFrame):
         output["point_diff_adj"] = output["point_diff_adj"].round(2)
     else:
         output["pred_point_diff"] = output["pred_point_diff"].round(2)
+    output["pred_point_diff"] = output["pred_point_diff"].round(2)
     output["pred_home_win_prob"] = output["pred_home_win_prob"].round(3)
+
     print()
     print(output.to_string(index=False))
     print()
