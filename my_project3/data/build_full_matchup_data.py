@@ -1,11 +1,11 @@
 import pandas as pd
-from pathlib import Path
-from my_project3.config import MATCHUPS_DATA_DIR, ODDS_PROC_DIR
+
+from my_project3.config import MATCHUPS_DIR, ODDS_PROC_DIR
 from my_project3.data.team_ratings import add_elo_features
 
 
-MATCHUP_DIR = MATCHUPS_DATA_DIR
-OUTPUT_PATH = MATCHUP_DIR / "matchups_all_seasons.csv"
+
+OUTPUT_PATH = MATCHUPS_DIR / "matchups_all_seasons.csv"
 
 def load_all_odds() -> pd.DataFrame:
     """
@@ -28,7 +28,7 @@ def combine_matchups():
     """
     all_dfs = []
     for season in ["2022", "2023", "2024", "2025"]:
-        file_path = MATCHUP_DIR / f"matchups_{season}.csv"
+        file_path = MATCHUPS_DIR / f"matchups_{season}.csv"
         if file_path.exists():
             df = pd.read_csv(file_path)
             df["season"] = int(season)

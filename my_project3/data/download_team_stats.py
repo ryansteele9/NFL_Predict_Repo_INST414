@@ -6,14 +6,14 @@ from dotenv import load_dotenv
 from pathlib import Path
 import requests
 import pandas as pd
-from my_project3.config import RAW_DATA_DIR
+from my_project3.config import RAW_STATS_JSON, RAW_STATS_CSV
 
-
-# Config
 load_dotenv()
 API_KEY = os.getenv("SPORTSDATAIO_API_KEY")
 BASE = "https://api.sportsdata.io/api/nfl"
-RAW_DIR  = RAW_DATA_DIR
+
+RAW_STATS_JSON.mkdir(parents=True, exist_ok=True)
+RAW_STATS_CSV.mkdir(parents=True, exist_ok=True)
 
 SLEEP = float(os.getenv("SDIO_SLEEP_SEC", "0.4"))
 
@@ -36,13 +36,13 @@ def team_game_stats_week(season: str, week: int) -> pd.DataFrame:
     r = get(url)
     if r.status_code == 200:
         data = r.json()
-        raw_path = RAW_DIR / f"sdio_team_stats_{season}_week{week}.json"
+        raw_path = RAW_STATS_JSON / f"sdio_team_stats_{season}_week{week}.json"
         with open(raw_path, "w") as file:
             json.dump(data, file)
             
         df = pd.json_normalize(data)
         
-        csv_path = RAW_DIR / f"team_stats_{season}_week{week}.csv"
+        csv_path = RAW_STATS_CSV / f"team_stats_{season}_week{week}.csv"
         df.to_csv(csv_path, index=False)
         return df
     elif r.status_code in (429, 503):
@@ -79,7 +79,7 @@ def download_season(season: str, weeks: int = 18):
     else:
         full = pd.DataFrame()
 
-    output = RAW_DIR / f"team_stats_{season}_all_weeks.csv"
+    output = RAW_STATS_CSV / f"team_stats_{season}_all_weeks.csv"
     full.to_csv(output, index=False)
     print(f"{season} :: Saved season file: {output} ({len(full)} rows)")
 

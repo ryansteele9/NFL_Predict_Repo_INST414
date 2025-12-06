@@ -1,11 +1,9 @@
 import pandas as pd
-from pathlib import Path
-import numpy as np
-from my_project3.config import FEATURES_DATA_DIR, MATCHUPS_DATA_DIR
 
-FEATURE_DIR = FEATURES_DATA_DIR
-OUTPUT_DIR = MATCHUPS_DATA_DIR
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+from my_project3.config import FEATURES_DIR, MATCHUPS_DIR
+
+
+MATCHUPS_DIR.mkdir(parents=True, exist_ok=True)
 
 STRENGTH_BASE_COLS = [
     "rolling_point_diff_3",
@@ -51,7 +49,7 @@ def build_matchups_for_season(season: str):
     """
     print(f"\nBuilding matchup data for season {season}...")
 
-    season_dir = FEATURE_DIR / season
+    season_dir = FEATURES_DIR / season
     if not season_dir.exists():
         print(f"No feature data found for {season}")
         return
@@ -76,7 +74,7 @@ def build_matchups_for_season(season: str):
 
     matchups = add_matchup_strength_features(matchups)
     
-    out_path = OUTPUT_DIR / f"matchups_{season}.csv"
+    out_path = MATCHUPS_DIR / f"matchups_{season}.csv"
     matchups.to_csv(out_path, index=False)
     print(f"Saved {len(matchups)} games to {out_path}")
 

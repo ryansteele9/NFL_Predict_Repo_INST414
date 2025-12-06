@@ -12,19 +12,26 @@ PROJ_ROOT = Path(__file__).resolve().parents[1]
 logger.info(f"PROJ_ROOT path is: {PROJ_ROOT}")
 
 DATA_DIR           = PROJ_ROOT / "data"
-RAW_DATA_DIR       = DATA_DIR / "raw"
-EXTERNAL_DIR       = DATA_DIR/ "external"
-INTERIM_DATA_DIR   = DATA_DIR / "interim"
-PROCESSED_DATA_DIR = DATA_DIR / "processed"
-FEATURES_DATA_DIR  = DATA_DIR / "features"
-MATCHUPS_DATA_DIR  = DATA_DIR / "matchups"
-TEAMS_DATA_DIR     = DATA_DIR / "teams"
-ODDS_RAW_DIR       = RAW_DATA_DIR / "odds"
-ODDS_PROC_DIR      = PROCESSED_DATA_DIR / "odds"
-INJURIES_RAW_DIR   = EXTERNAL_DIR / "injuries"
-INJURIES_PROC_DIR  = PROCESSED_DATA_DIR / "injuries"
 
-MODELS_DIR         = PROJ_ROOT / "my_project3" / "modeling"
+RAW_DIR            = DATA_DIR / "raw"
+RAW_STATS_JSON     = RAW_DIR / "sdio_json"
+RAW_STATS_CSV      = RAW_DIR / "team_stats_csv"
+ODDS_RAW_DIR       = RAW_DIR / "odds"
+
+EXTERNAL_DIR       = DATA_DIR/ "external"
+INJURIES_RAW_DIR   = EXTERNAL_DIR / "injuries"
+
+INTERIM_DATA_DIR   = DATA_DIR / "interim"
+
+PROC_DIR           = DATA_DIR / "processed"
+CLEAN_STATS_DIR    = PROC_DIR / "clean_team_stats_season"
+TEAMS_DIR          = PROC_DIR / "teams"
+FEATURES_DIR       = PROC_DIR / "features"
+MATCHUPS_DIR       = PROC_DIR / "matchups"
+ODDS_PROC_DIR      = PROC_DIR / "odds"
+INJURIES_PROC_DIR  = PROC_DIR / "injuries"
+
+MODELS_DIR         = PROJ_ROOT / "models"
 
 SPORTSDATAIO_API_KEY = os.getenv("SPORTSDATAIO_API_KEY")
 

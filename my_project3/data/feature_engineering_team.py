@@ -1,14 +1,10 @@
 import pandas as pd
 import numpy as np
-from loguru import logger
-from pathlib import Path
 
-from my_project3.config import TEAMS_DATA_DIR, FEATURES_DATA_DIR
+from my_project3.config import TEAMS_DIR, FEATURES_DIR
 from my_project3.data.nflfastr_epa import load_nflfastr_team_epa
 
-TEAM_DIR = TEAMS_DATA_DIR
-FEATURE_DIR = FEATURES_DATA_DIR 
-FEATURE_DIR.mkdir(parents=True, exist_ok=True)
+FEATURES_DIR.mkdir(parents=True, exist_ok=True)
 
 NFLFASTR_EPA = load_nflfastr_team_epa()
 
@@ -172,8 +168,8 @@ def process_season(season: str):
     """
     Process all teams in a given season.
     """
-    season_team_dir = TEAM_DIR / season
-    season_output_dir = FEATURE_DIR / season
+    season_team_dir = TEAMS_DIR / season
+    season_output_dir = FEATURES_DIR / season
     season_output_dir.mkdir(parents=True, exist_ok=True)
 
     for team_file in season_team_dir.glob("*.csv"):

@@ -1,12 +1,6 @@
 import pandas as pd
-from pathlib import Path
-from my_project3.config import PROCESSED_DATA_DIR, TEAMS_DATA_DIR
+from my_project3.config import TEAMS_DIR, CLEAN_STATS_DIR
 
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_ROOT / "data"
-PROC_DIR = PROCESSED_DATA_DIR
-TEAMS_DIR = TEAMS_DATA_DIR
 TEAMS_DIR.mkdir(parents=True, exist_ok=True)
 
 def split_cleaned_season(season: str):
@@ -14,7 +8,7 @@ def split_cleaned_season(season: str):
     Split clean_team_stats_{season}.csv into 32 team-specific CSVs.
     Each CSV contains weekly rows for exactly one team in that season.
     """
-    file_path = PROC_DIR / f"clean_team_stats_{season}.csv"
+    file_path = CLEAN_STATS_DIR / f"clean_team_stats_{season}.csv"
     if not file_path.exists():
         print(f"File not found: {file_path}")
         return

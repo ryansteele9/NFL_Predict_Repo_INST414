@@ -1,15 +1,18 @@
-# Ignore raw and processed data only:
-data/*.csv
+# Ignore raw data:
 data/raw/
-data/processed/
 data/interim/
 data/external/
+data/raw/sdio_json/
+data/raw/team_stats_csv/
+data/raw/schedules/
 
-!my_project3/data/*.py
-
-# Ignore trained models
-models/
-*.pkl
+# Ignore any .csv inside folders
+data/raw/**
+data/external/**
+data/raw/sdio_json/**
+data/raw/team_stats_csv/**
+data/raw/schedules/**
+data/raw/odds/**
 
 # If using the Cookiecutter structure under my_project3/
 !my_project3/data/.gitkeep

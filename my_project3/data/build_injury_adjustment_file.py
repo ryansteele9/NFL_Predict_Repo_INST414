@@ -1,9 +1,11 @@
 import pandas as pd
 from pathlib import Path
 
+from my_project3.config import INJURIES_PROC_DIR
+
 def main():
-    input_path = Path("data/processed/injuries/cbs_injuries_cleaned_week14.csv")
-    df = pd.read_csv(input_path)
+    INJURIES_PROC_DIR.mkdir(parents=True, exist_ok=True)
+    df = pd.read_csv(INJURIES_PROC_DIR / "cbs_injuries_cleaned_week14.csv")
     
     df["status"] = df["severity"].astype(str).str.lower().str.strip()
     

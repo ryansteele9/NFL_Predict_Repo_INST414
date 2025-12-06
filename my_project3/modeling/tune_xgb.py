@@ -1,7 +1,7 @@
 import pandas as pd
 from loguru import logger
 
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score, confusion_matrix, precision_score, recall_score
+from sklearn.metrics import mean_absolute_error
 import xgboost as xgb
 import numpy as np
 

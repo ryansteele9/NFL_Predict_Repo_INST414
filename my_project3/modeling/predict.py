@@ -13,11 +13,11 @@ from my_project3.data.build_matchup_data import add_matchup_strength_features
 from my_project3.data.team_ratings import get_elo_ratings_to_week
 from my_project3.data.injury_adjust import compute_team_injury_adjustments, apply_injury_adjustments
 from my_project3.data.build_matchup_data import add_matchup_strength_features
-from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR, FEATURES_DATA_DIR, RAW_DATA_DIR, ODDS_PROC_DIR
+from my_project3.config import MODELS_DIR, MATCHUPS_DIR, FEATURES_DIR, RAW_DIR, ODDS_PROC_DIR
 
 app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
 
-SCHEDULES_DIR = RAW_DATA_DIR / "schedules"
+SCHEDULES_DIR = RAW_DIR / "schedules"
 SCHEDULES_DIR.mkdir(parents=True, exist_ok=True)
 
 SPORTSDATA_API_KEY = os.environ.get("SPORTSDATAIO_API_KEY")
@@ -67,7 +67,7 @@ def load_historical_matchups() -> pd.DataFrame:
     Load full historical matchup dataset to compute elos.
     """
     
-    path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv"
+    path = MATCHUPS_DIR / "matchups_all_seasons.csv"
     if not path.exists():
         raise FileNotFoundError(f"{path} not found. Run build_full_matchup_data.py before predicting.")
     
@@ -172,7 +172,7 @@ def load_schedule(season: int, week: int, season_type: str = "REG") -> pd.DataFr
     return df
 
 def team_features_path(season: int, team: str) -> Path:
-    season_dir = FEATURES_DATA_DIR / str(season)
+    season_dir = FEATURES_DIR / str(season)
     return season_dir / f"{team}_{season}_features.csv"
 
 def get_features_for_future_week(season: int, future_week: int, team: str) -> pd.Series:
@@ -353,7 +353,7 @@ def main(
         raise ValueError("No games match the given filters.")
     
     if save_matchups:
-        out_path = MATCHUPS_DATA_DIR / f"future_matchups_{season}{season_type}_week{week:02d}.csv"
+        out_path = MATCHUPS_DIR / f"future_matchups_{season}{season_type}_week{week:02d}.csv"
         df_matchups.to_csv(out_path, index=False)
         logger.info(f"Saved future matchups to {out_path}")
     

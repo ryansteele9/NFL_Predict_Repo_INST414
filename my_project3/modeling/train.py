@@ -3,13 +3,12 @@ import pickle
 
 import pandas as pd
 from loguru import logger
-from tqdm import tqdm
 import typer
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score, confusion_matrix, precision_score, recall_score
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 import xgboost as xgb
 import numpy as np
 
-from my_project3.config import MODELS_DIR, MATCHUPS_DATA_DIR
+from my_project3.config import MODELS_DIR, MATCHUPS_DIR
 from my_project3.modeling.tune_xgb import tune_xgb_hyperparams
 
 app = typer.Typer()
@@ -145,16 +144,14 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
     return final_cols
 
 @app.command()
-def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv", 
+def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv", 
          model_path: Path = MODELS_DIR / "xgb_point_diff.pkl"):
     logger.info(f"Loading data from {features_path}")
     df = pd.read_csv(features_path)
     
     target_col = "point_diff"
     
-    before_drop = len(df)
     df = df.dropna(subset=[target_col])
-    logger.info(f"Dropped {before_drop - len(df)} rows with missing target column")
     
     df = scale_vegas_features(df)
 
@@ -191,14 +188,7 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
             f"\n==== Rolling split: Test season {test_season} ====\n"
             f"Train: {len(X_train)} rows | Val: {len(X_val)} rows | Test: {len(X_test)} rows"
         )
-        
-        majority_acc = win_test.mean()
-        logger.info(f"[Season {test_season}] Test majority baseline (always predict win): {majority_acc:.3f}")
     
-        if "home" in df.columns:
-            home_pred = df.loc[test_set, "home"].astype(int)
-            home_acc = (home_pred == win_test).mean()
-            logger.info(f"[Season {test_season}] Always-home baseline: {home_acc:.3f}")
         # best_params = tune_xgb_hyperparams(df, feature_cols, target_col)
         model = xgb.XGBRegressor(
             objective="reg:squarederror",
@@ -246,8 +236,7 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
         preds_test = model.predict(X_test)
         spread_mae = np.mean(np.abs(preds_test - y_test))
         spread_bias = np.mean(preds_test - y_test)
-        logger.info(f"[Season {test_season}] Test Spread MAE: {spread_mae:.3f}")
-        logger.info(f"[Season {test_season}] Spread Bias (positive = overpredicting home): {spread_bias:.3f}")
+        logger.info(f"[Season {test_season}] Spread Bias (positive = overpredicting home): {spread_bias:.3f}\n")
         
         all_metrics.append({
             "test_season": test_season,
@@ -258,10 +247,6 @@ def main(features_path: Path = MATCHUPS_DATA_DIR / "matchups_all_seasons.csv",
             "test_Spread_MAE": spread_mae,
             "test_Spread_Bias": spread_bias,
         })
-    
-    logger.info("=== Summary across test seasons ===")
-    for m in all_metrics:
-        logger.info(m)
     
 
     final_train_mask = df["point_diff"].notna()

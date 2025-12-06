@@ -1,16 +1,15 @@
 import pandas as pd
-from my_project3.config import RAW_DATA_DIR, PROCESSED_DATA_DIR
+from my_project3.config import PROC_DIR, RAW_STATS_CSV, CLEAN_STATS_DIR
 
-RAW_DIR  = RAW_DATA_DIR
-PROC_DIR = PROCESSED_DATA_DIR
 PROC_DIR.mkdir(parents=True, exist_ok=True)
+CLEAN_STATS_DIR.mkdir(parents=True, exist_ok=True)
 
 def clean_season(season: str):
     """
     Clean team stats dataset for a given season, rename some features, and 
     compute some basic features.
     """
-    file_path = RAW_DIR / f"team_stats_{season}REG_all_weeks.csv"
+    file_path = RAW_STATS_CSV / f"team_stats_{season}REG_all_weeks.csv"
 
     if not file_path.exists():
         print(f"File not found: {file_path}")
@@ -59,7 +58,7 @@ def clean_season(season: str):
 
     df["home"] = (df["home_away"] == "Home").astype(int)
 
-    out_file = PROC_DIR / f"clean_team_stats_{season}.csv"
+    out_file = CLEAN_STATS_DIR / f"clean_team_stats_{season}.csv"
     df.to_csv(out_file, index=False)
 
     print(f"Saved cleaned file to {out_file} ({len(df)} rows)")
