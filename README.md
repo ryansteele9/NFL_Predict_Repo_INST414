@@ -26,10 +26,11 @@ the outcome of any future NFL game with >55% accuracy.
 ## Datasets
 | Data Type | Source | Size | Notes |
 |----------:|:------:|:----:|:-----:|
-| Weekly NFL data (2022-2025) | SportsDataIO (https://sportsdata.io/) | Size | API key required |
-| Play-by-play EPA metrics | nflfastR (https://nflfastr.com/) | Size | |
-| Vegas Odds | SportsDataIO (https://sportsdata.io/) | Size | API key required |
-| Current Injury Report | CBS Sports (https://www.cbssports.com/nfl/injuries/) | Size | Only used for predicting future outcomes, not used in training model |
+| Weekly NFL data (2022-2025) | SportsDataIO (https://sportsdata.io/) | Records: 2024; Columns: 159 | API key required |
+| Play-by-play EPA metrics | nflfastR (https://nflfastr.com/) | Records: 2019; Columns: 18 | Used to derive matchup strength features and other advanced metrics |
+| Vegas Odds | SportsDataIO (https://sportsdata.io/) | Records: 1160; Columns: 10 | API key required |
+| Current Injury Report | CBS Sports (https://www.cbssports.com/nfl/injuries/) | Records: 452; Columns: 4 | Only used for predicting future outcomes, not used in training model |
+| Current Week NFL Schedule | SportsDataIO (https://sportsdata.io/) | Records: 15; Columns: 5 | API key required; only used for predicting games in upcoming week |
 
 ## Project Organization
 
