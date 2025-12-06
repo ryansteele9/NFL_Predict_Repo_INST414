@@ -9,11 +9,11 @@ from loguru import logger
 import typer
 import requests
 
-from my_project3.data.build_matchup_data import add_matchup_strength_features
-from my_project3.data.team_ratings import get_elo_ratings_to_week
-from my_project3.data.injury_adjust import compute_team_injury_adjustments, apply_injury_adjustments
-from my_project3.data.build_matchup_data import add_matchup_strength_features
-from my_project3.config import MODELS_DIR, MATCHUPS_DIR, FEATURES_DIR, RAW_DIR, ODDS_PROC_DIR
+from nfl_prediction.data.build_matchup_data import add_matchup_strength_features
+from nfl_prediction.data.team_ratings import get_elo_ratings_to_week
+from nfl_prediction.data.injury_adjust import compute_team_injury_adjustments, apply_injury_adjustments
+from nfl_prediction.data.build_matchup_data import add_matchup_strength_features
+from nfl_prediction.config import MODELS_DIR, MATCHUPS_DIR, FEATURES_DIR, RAW_DIR, ODDS_PROC_DIR
 
 app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
 

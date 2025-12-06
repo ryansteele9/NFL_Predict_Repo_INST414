@@ -1,5 +1,5 @@
 import pandas as pd
-from my_project3.config import INJURIES_RAW_DIR
+from nfl_prediction.config import INJURIES_RAW_DIR
 
 URL = "https://www.cbssports.com/nfl/injuries/"
 

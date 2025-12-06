@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-from my_project3.config import INJURIES_PROC_DIR
+from nfl_prediction.config import INJURIES_PROC_DIR
 
 def main():
     INJURIES_PROC_DIR.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from my_project3.config import FEATURES_DIR, MATCHUPS_DIR
+from nfl_prediction.config import FEATURES_DIR, MATCHUPS_DIR
 
 
 MATCHUPS_DIR.mkdir(parents=True, exist_ok=True)

@@ -8,8 +8,8 @@ from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_sco
 import xgboost as xgb
 import numpy as np
 
-from my_project3.config import MODELS_DIR, MATCHUPS_DIR
-from my_project3.modeling.tune_xgb import tune_xgb_hyperparams
+from nfl_prediction.config import MODELS_DIR, MATCHUPS_DIR
+from nfl_prediction.modeling.tune_xgb import tune_xgb_hyperparams
 
 app = typer.Typer()
 

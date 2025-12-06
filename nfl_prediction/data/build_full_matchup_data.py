@@ -1,7 +1,7 @@
 import pandas as pd
 
-from my_project3.config import MATCHUPS_DIR, ODDS_PROC_DIR
-from my_project3.data.team_ratings import add_elo_features
+from nfl_prediction.config import MATCHUPS_DIR, ODDS_PROC_DIR
+from nfl_prediction.data.team_ratings import add_elo_features
 
 
 

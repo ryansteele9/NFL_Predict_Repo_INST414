@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import requests
 import pandas as pd
-from my_project3.config import RAW_STATS_JSON, RAW_STATS_CSV
+from nfl_prediction.config import RAW_STATS_JSON, RAW_STATS_CSV
 
 load_dotenv()
 API_KEY = os.getenv("SPORTSDATAIO_API_KEY")

@@ -1,6 +1,6 @@
 import pandas as pd
 
-from my_project3.config import EXTERNAL_DIR
+from nfl_prediction.config import EXTERNAL_DIR
 
 def load_nflfastr_team_epa() -> pd.DataFrame:
     """

@@ -3,7 +3,7 @@ import numpy as np
 import requests
 import pandas as pd
 
-from my_project3.config import ODDS_RAW_DIR, ODDS_PROC_DIR, SPORTSDATAIO_API_KEY
+from nfl_prediction.config import ODDS_RAW_DIR, ODDS_PROC_DIR, SPORTSDATAIO_API_KEY
 
 def american_to_prob(odds: float) -> float:
     """

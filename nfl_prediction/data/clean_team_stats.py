@@ -1,5 +1,5 @@
 import pandas as pd
-from my_project3.config import PROC_DIR, RAW_STATS_CSV, CLEAN_STATS_DIR
+from nfl_prediction.config import PROC_DIR, RAW_STATS_CSV, CLEAN_STATS_DIR
 
 PROC_DIR.mkdir(parents=True, exist_ok=True)
 CLEAN_STATS_DIR.mkdir(parents=True, exist_ok=True)

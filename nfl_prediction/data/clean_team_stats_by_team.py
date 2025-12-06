@@ -1,5 +1,5 @@
 import pandas as pd
-from my_project3.config import TEAMS_DIR, CLEAN_STATS_DIR
+from nfl_prediction.config import TEAMS_DIR, CLEAN_STATS_DIR
 
 TEAMS_DIR.mkdir(parents=True, exist_ok=True)
 

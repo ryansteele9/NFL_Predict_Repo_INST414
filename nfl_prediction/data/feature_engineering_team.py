@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-from my_project3.config import TEAMS_DIR, FEATURES_DIR
-from my_project3.data.nflfastr_epa import load_nflfastr_team_epa
+from nfl_prediction.config import TEAMS_DIR, FEATURES_DIR
+from nfl_prediction.data.nflfastr_epa import load_nflfastr_team_epa
 
 FEATURES_DIR.mkdir(parents=True, exist_ok=True)
 
