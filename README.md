@@ -4,7 +4,32 @@
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
 
-description
+## NFL Game Outcome Prediction Pipeline 2025
+Predict NFL game point differentials for upcoming NFL weeks in 2025 NFL season. 
+Model uses weekly team data, play-by-play analytics, Vegas odds, and other 
+engineered features. 
+
+This project implements an end-to-end machine learning pipeline following the
+Cookiecutter Data Science structure. Requires API key from SportsDataIO 
+(https://sportsdata.io/) to reproduce results.
+
+## Project Statement
+NFL games are unpredictable——game outcomes are affected by a host of factors, 
+including, but not limited to, team-strength, opponent matchups, injuries, 
+strategy, and a lot of randomness.
+### Goal:
+Build a data-driven model that predicts NFL game outcomes via game point 
+differentials. Specifically, this project aims to predict future games in the
+2025 season, using historical and 2025 season data. The objective is to predict
+the outcome of any future NFL game with >55% accuracy.
+
+## Datasets
+| Data Type | Source | Size | Notes |
+|----------:|:------:|:----:|:-----:|
+| Weekly NFL data (2022-2025) | SportsDataIO (https://sportsdata.io/) | Size | API key required |
+| Play-by-play EPA metrics | nflfastR (https://nflfastr.com/) | Size | |
+| Vegas Odds | SportsDataIO (https://sportsdata.io/) | Size | API key required |
+| Current Injury Report | CBS Sports (https://www.cbssports.com/nfl/injuries/) | Size | Only used for predicting future outcomes, not used in training model |
 
 ## Project Organization
 
