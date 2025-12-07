@@ -43,6 +43,9 @@ def scale_vegas_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     for col, factor in VEGAS_SCALE_MAP.items():
         if col in df.columns:
+            raw_col = f"{col}_raw"
+            if raw_col not in df.columns:
+                df[raw_col] = df[col]
             df[col] = df[col] * factor
         else:
             logger.warning(f"Vegas column '{col}' not found in dataframe during scaling.")
@@ -241,8 +244,41 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
         mae_test, rmse_test, r2_test, winacc_test = report_split("Test",  X_test,  y_test,  win_test)
         
         preds_test = model.predict(X_test)
-        spread_mae = np.mean(np.abs(preds_test - y_test))
-        spread_bias = np.mean(preds_test - y_test)
+        model_err = preds_test - y_test
+        spread_mae = np.mean(np.abs(model_err))
+        spread_bias = np.mean(model_err)
+
+        # --- Vegas comparison metrics ---
+        if "vegas_spread_raw" in df.columns:
+            vegas_spread_raw = df.loc[test_set, "vegas_spread_raw"].values
+            vegas_err = (- vegas_spread_raw) - y_test.values
+
+            # 1) Beat-Vegas rate
+            model_abs = np.abs(model_err)
+            vegas_abs = np.abs(vegas_err)
+            beat_vegas = (model_abs < vegas_abs)
+            beat_vegas_rate = beat_vegas.mean()
+
+            # 2) Average edge vs Vegas (negative = better than Vegas)
+            avg_edge_vs_vegas = float(np.mean(model_abs - vegas_abs))
+
+            # 3) ATS accuracy (model vs actual cover)
+            # Home covers if actual margin > -spread
+            home_covers_actual = (y_test.values > -vegas_spread_raw).astype(int)
+            home_covers_model  = (preds_test > -vegas_spread_raw).astype(int)
+            ats_acc_model = (home_covers_actual == home_covers_model).mean()
+
+            logger.info(
+                f"[Season {test_season}] Beat-Vegas rate: {beat_vegas_rate:.3f} | "
+                f"Avg edge vs Vegas (MAE diff): {avg_edge_vs_vegas:.3f} | "
+                f"ATS accuracy (model): {ats_acc_model:.3f}"
+            )
+        else:
+            beat_vegas_rate = np.nan
+            avg_edge_vs_vegas = np.nan
+            ats_acc_model = np.nan
+
+        logger.info(f"[Season {test_season}] Test Spread MAE: {spread_mae:.3f}")
         logger.info(f"[Season {test_season}] Spread Bias (positive = overpredicting home): {spread_bias:.3f}\n")
         
         all_metrics.append({
@@ -253,22 +289,24 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
             "test_WIN_ACC": winacc_test,
             "test_Spread_MAE": spread_mae,
             "test_Spread_Bias": spread_bias,
+            "Beat_Vegas_Rate": beat_vegas_rate,
+            "Edge_vs_Vegas_MAE": avg_edge_vs_vegas,
+            "ATS_ACC_Model": ats_acc_model,
         })
         
         reports_dir = Path("reports")
         reports_dir.mkdir(parents=True, exist_ok=True)
         
         result_cols = [
-    "season",
-    "week",
-    "team",
-    "opponent",
-    "home",              # if present
-    "vegas_spread",
-    "home_implied_prob",
-]
+            "season",
+            "week",
+            "team",
+            "opponent",
+            "home",
+            "vegas_spread",
+            "home_implied_prob",
+        ]
 
-        # Filter to only those that actually exist in df (avoids KeyErrors)
         result_cols = [c for c in result_cols if c in df.columns]
 
         # ---------- TEST RESULTS ----------
@@ -281,7 +319,7 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
 
         test_base.to_csv(reports_dir / f"predictions_test_{test_season}.csv", index=False)
 
-        # ---------- TRAIN RESULTS (optional, but nice to have) ----------
+        # ---------- TRAIN RESULTS ----------
         train_base = df.loc[train_set, result_cols].copy()
 
         train_base["y_true"] = y_train.values

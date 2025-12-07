@@ -163,6 +163,29 @@ accuracy. This is signifigantly higher than the target of >55%. Factors that
 signifigantly improved model performance inlude EPA-based efficiency metrics,
 Elo-ratings for each team, and rolling point differentials.
 
+### Test split results compared to Vegas predictions
+| season | Beat-Vegas % | Avg. Edge vs Vegas (MAE diff) | ATS Acc % (model) |
+|:------:|:---------------:|:-----------------------------:|:---------------:|
+| 2023 | 41.8% | 0.657 | 51.5% |
+| 2024 | 50.5% | 0.190 | 56.2% |
+| 2025 | 47.9% | 0.287 | 52.1% |
+
+Test splits for Vegas evaluation metrics.
+- Beat-Vegas %: Percentage of test point differential with smaller error than 
+    vegas spread
+- Avg. Edge vs. Vegas: Difference in mean absolute error between test point
+    differentials and vegas spreads (negative = better than Vegas)
+- ATS Acc % (model): Percentage of predicted point differentials that correctly
+    predict against the spread outcome. (e.g. if model predicts BAL to win by 
+    10 and Vegas spread has BAL at -4.5, model correctly predicts ATS outcome)
+
+**Conclusion**
+Model predictions are slightly worse than Vegas spreads. 2023 is signifigantly
+worse, most likely due to rolling time-series splits, where 2023 would have
+least amount of training data. 2024 is the best by a good margin. 2025 is 
+slightly worse, most likely due to either there being less testing data (season
+not over yet) and/or increased variation in 2025 outcomes.
+
 
 ## Project Organization
 
