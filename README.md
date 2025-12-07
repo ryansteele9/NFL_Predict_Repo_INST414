@@ -171,7 +171,7 @@ Elo-ratings for each team, and rolling point differentials.
 | 2025 | 47.9% | 0.287 | 52.1% |
 
 Test splits for Vegas evaluation metrics.
-- Beat-Vegas %: Percentage of test point differential with smaller error than 
+- Beat-Vegas %: Percentage of test point differentials with smaller error than 
     vegas spread
 - Avg. Edge vs. Vegas: Difference in mean absolute error between test point
     differentials and vegas spreads (negative = better than Vegas)
