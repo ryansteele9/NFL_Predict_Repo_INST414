@@ -179,7 +179,7 @@ Test splits for Vegas evaluation metrics.
     predict against the spread outcome. (e.g. if model predicts BAL to win by 
     10 and Vegas spread has BAL at -4.5, model correctly predicts ATS outcome)
 
-**Conclusion**
+**Conclusion:**
 Model predictions are slightly worse than Vegas spreads. 2023 is signifigantly
 worse, most likely due to rolling time-series splits, where 2023 would have
 least amount of training data. 2024 is the best by a good margin. 2025 is 
