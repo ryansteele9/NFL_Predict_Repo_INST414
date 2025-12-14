@@ -36,10 +36,10 @@ SCHEDULES_DIR.mkdir(parents=True, exist_ok=True)
 SPORTSDATA_API_KEY = os.environ.get("SPORTSDATAIO_API_KEY")
 
 VEGAS_SCALE_MAP = {
-    "home_moneyline": 0.1,
-    "away_moneyline": 0.1,
-    "home_implied_prob": 0.3,
-    "vegas_spread": 0.5,
+    "home_moneyline": 0,
+    "away_moneyline": 0,
+    "home_implied_prob": 1,
+    "vegas_spread": 1,
 }
 
 def scale_vegas_features(df: pd.DataFrame) -> pd.DataFrame:

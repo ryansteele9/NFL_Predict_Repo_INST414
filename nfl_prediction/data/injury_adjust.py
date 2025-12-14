@@ -12,6 +12,7 @@ STATUS_MAP = {
     "questionable": 0.5,
     "ir": -0.6,
     "pup": -0.35,
+    "healthy": 0,
 }
 
 

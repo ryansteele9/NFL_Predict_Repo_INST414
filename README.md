@@ -246,6 +246,7 @@ my_repo2/
 |   ├── baseline_model.ipynb            ← Baseline models for comparison
 |   ├── model_comparison.ipynb          ← Comparing XGBoost vs. RandomForest
 |   ├── feature_importance.ipynb        ← Feature importance to XGBoost model
+|   ├── model_2025_predict_check.ipynb  ← Model next-week prediction performance
 |   └── regression_diagnostics.ipynb    ← Residual/Errors plots & distributions
 │
 ├── reports/                          ← Final reports, EDA summaries

@@ -332,7 +332,7 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
         logger.info(f"Saved predictions for season {test_season}\n")
     
 
-    final_train_mask = df["point_diff"].notna()
+    final_train_mask = df["season"] >= 2024
     X_final = X[final_train_mask]
     y_final = y[final_train_mask]
     
